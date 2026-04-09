@@ -11,4 +11,5 @@ sealed interface ProfileEvent {
     data class OnSaveEveningTime(val eveningTime: LocalDateTime): ProfileEvent
     data class OnSaveMorningTime(val morningTime: LocalDateTime): ProfileEvent
     data class OnSaveNewUser(val signUpUiState: SignUpUiState): ProfileEvent
+    data class OnLoginUser(val userId: String): ProfileEvent
 }

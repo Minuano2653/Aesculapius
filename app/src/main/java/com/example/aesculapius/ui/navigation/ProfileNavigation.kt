@@ -22,6 +22,7 @@ import com.example.aesculapius.ui.profile.SetReminderTimeProfile
 import com.example.aesculapius.ui.signup.SetReminderTime
 import com.example.aesculapius.ui.signup.SetReminderTimeScreen
 import com.example.aesculapius.ui.signup.SignUpUiState
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 fun NavGraphBuilder.profileNavGraph(
@@ -37,9 +38,9 @@ fun NavGraphBuilder.profileNavGraph(
         ProfileScreen(
             modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
             onNavigate = navController::navigate,
-            getTestsScore = getTestsScore,
+            userRegisterDate = userUiState.userRegisterDate,
             getMedicinesScore = getMedicinesScore,
-            userRegisterDate = userUiState.userRegisterDate
+            getTestsScore = getTestsScore
         )
         turnOnBars()
     }

@@ -582,7 +582,7 @@ fun ShowLineChart(
             tickLength = 0.dp,
             guideline = null
         ),
-        marker = rememberMarker(age = Period.between(userUiState.birthday, LocalDate.now()).years, height = userUiState.height.toInt()),
+        marker = rememberMarker(age = Period.between(userUiState.birthday, LocalDate.now()).years, height = userUiState.height.toDouble().toInt()),
         markerVisibilityChangeListener = object : MarkerVisibilityChangeListener {
             // update data when on marker moved
             override fun onMarkerMoved(

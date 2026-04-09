@@ -42,30 +42,22 @@ class MainActivity : ComponentActivity() {
                 // здесь при запуске приложения инициализируются переменные, хранящиеся в DataStore Preferences
                 val profileViewModel: ProfileViewModel = hiltViewModel()
                 val userUiState: SignUpUiState by profileViewModel.userUiState.collectAsState()
-                Log.i("TAGTAG", userUiState.id ?: "загрузка")
+
                 when (userUiState.id) {
-                    "" -> {
-                        SignUpNavigation(
-                            // в окончание регистрации меняет id и устанавливает напоминания
-                            onEndRegistration = {
-                                profileViewModel.onEvent(ProfileEvent.OnSaveNewUser(
-                                    it.copy(id = UserRemoteDataRepository.getUserId())
-                                ))
-                            }
-                        )
-                    }
+                    "" -> SignUpNavigation(onProfileEvent = profileViewModel::onProfileEvent)
 
                     null -> ImageDisplay()
 
                     else -> {
                         // передаём id пользователя в worker, запускающийся периодически для бэкапа статистики
                         val inputData = Data.Builder().putString("userId", userUiState.id).build()
+                        Log.d("USER_TAG", "user id: ${userUiState.id}")
                         val workRequest = OneTimeWorkRequestBuilder<UserWorkerSchedule>().setInputData(inputData).build()
                         WorkManager.getInstance(this).enqueue(workRequest)
 
                         HomeScreen(
                             userUiState = userUiState,
-                            onProfileEvent = profileViewModel::onEvent
+                            onProfileEvent = profileViewModel::onProfileEvent
                         )
                     }
                 }

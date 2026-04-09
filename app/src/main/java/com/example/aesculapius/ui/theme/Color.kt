@@ -31,4 +31,5 @@ val tertiaryContainer = Color.White
 val onError = Color(0x146750A4)
 val primaryContainer = Color.Gray
 
+val errorLoginField = Color(0xFFD71544)
 val mediumResultColor = Color(0xFFF9DC80)

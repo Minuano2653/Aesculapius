@@ -230,4 +230,19 @@
     <string name="your_activity">Твоя активность</string>
     <string name="what_is_activity">Что такое активность?</string>
     <string name="rec_test_result">Чем больше баллов, тем хуже приверженность.</string>
+    <string name="think_password">Придумай пароль</string>
+    <string name="i_have_account">У меня уже есть аккаунт</string>
+    <string name="email_exist">Аккаунт с такой почтой уже существует</string>
+    <string name="wrong_email">Неверная почта</string>
+    <string name="wrong_password">Неверный пароль</string>
+    <string name="type_email">Укажи электронную почту</string>
+    <string name="email">Почта</string>
+    <string name="password">Пароль</string>
+    <string name="retype_password">Повтори пароль</string>
+    <string name="something_went_wrong">Что-то пошло не так, попробуй позже</string>
+    <string name="check_internet_connection">Проверь подключение к сети</string>
+    <string name="check_email_password">Проверь введённые почту и пароль</string>
+    <string name="new_user">Я новый пользователь</string>
+    <string name="login">Войти</string>
+    <string name="your_helper_with_asthma">Твой помощник в борьбе с астмой</string>
 </resources>

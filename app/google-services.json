@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "700403481856",
-    "project_id": "aesculapius-27a19",
-    "storage_bucket": "aesculapius-27a19.appspot.com"
+    "project_number": "639245462619",
+    "project_id": "astma-b4709",
+    "storage_bucket": "astma-b4709.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:700403481856:android:69c49224bdb0b9f4cd07e5",
+        "mobilesdk_app_id": "1:639245462619:android:3d68c34056c8007b3de37e",
         "android_client_info": {
           "package_name": "com.example.aesculapius"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBY8bYDl32eY3CN8Y5oRj1hI_GCqqG54jE"
+          "current_key": "AIzaSyC9XedKYjc0nkxof0ikPd1y4_lwgfCFwM4"
         }
       ],
       "services": {
