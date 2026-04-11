@@ -22,5 +22,6 @@ data class SignUpUiState(
     val emailError: String = "",
     val firstPasswordError: String = "",
     val secondPasswordError: String = "",
-    val password: String = ""
+    val password: String = "",
+    val currentPage: Int = 0
 )

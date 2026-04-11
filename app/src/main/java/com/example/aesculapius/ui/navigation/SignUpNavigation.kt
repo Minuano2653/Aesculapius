@@ -1,20 +1,14 @@
 package com.example.aesculapius.ui.navigation
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -29,7 +23,6 @@ import com.example.aesculapius.ui.signup.SetReminderTime
 import com.example.aesculapius.ui.signup.SetReminderTimeScreen
 import com.example.aesculapius.ui.signup.SignUpEvent
 import com.example.aesculapius.ui.signup.SignUpScreen
-import com.example.aesculapius.ui.signup.SignUpUiState
 import com.example.aesculapius.ui.signup.SignUpViewModel
 import java.time.format.DateTimeFormatter
 
@@ -39,10 +32,7 @@ fun SignUpNavigation(
     navController: NavHostController = rememberNavController(),
     signUpViewModel: SignUpViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
-
     val signUpUiState by signUpViewModel.uiStateSingUp.collectAsState()
-    var currentPage by remember { mutableIntStateOf(0) }
 
     NavHost(
         navController = navController,
@@ -93,14 +83,13 @@ fun SignUpNavigation(
         composable(route = SignUpScreen.route) {
             SignUpScreen(
                 userUiState = signUpUiState,
-                currentPage = currentPage,
-                onChangeCurrentPage = { currentPage++ },
                 onEvent = signUpViewModel::onEvent,
                 onEndRegistration = {
                     onProfileEvent(ProfileEvent.OnSaveNewUser(signUpUiState.copy(id = it)))
                 },
                 onClickSetReminder = { navController.navigate("${SetReminderTime.route}/${it}") },
-                onNavigateBack = navController::navigateUp
+                onNavigateBack = navController::navigateUp,
+                uiEvent = signUpViewModel.uiEvent
             )
         }
     }

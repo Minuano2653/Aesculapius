@@ -37,6 +37,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -79,15 +80,25 @@ object SignUpScreen : NavigationDestination {
 @Composable
 fun SignUpScreen(
     onNavigateBack: () -> Unit,
-    onChangeCurrentPage: () -> Unit,
     userUiState: SignUpUiState,
-    currentPage: Int,
     onEvent: (SignUpEvent) -> Unit,
     onClickSetReminder: (Hours) -> Unit,
     onEndRegistration: (String) -> Unit,
+    uiEvent: kotlinx.coroutines.flow.Flow<SignUpUiEvent>,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val currentPage = userUiState.currentPage
+
+    LaunchedEffect(Unit) {
+        uiEvent.collect { event ->
+            when (event) {
+                is SignUpUiEvent.NavigateToHome -> onEndRegistration(event.userId)
+                is SignUpUiEvent.ShowToast ->
+                    Toast.makeText(context, context.getString(event.messageRes), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -160,9 +171,7 @@ fun SignUpScreen(
                                     onEvent(
                                         SignUpEvent.OnClickRegister(
                                             login = userUiState.email,
-                                            password = userUiState.firstPassword,
-                                            context = context,
-                                            onEndRegistration = onEndRegistration
+                                            password = userUiState.firstPassword
                                         )
                                     )
                             }
@@ -174,7 +183,7 @@ fun SignUpScreen(
                                     if (!(heightFinal in 20f..300f && weightFinal in 0f..1000f))
                                         throw IllegalArgumentException(context.getString(R.string.weight_height_warning))
                                     else {
-                                        onChangeCurrentPage()
+                                        onEvent(SignUpEvent.OnNextPage)
                                     }
                                 } catch (e: NumberFormatException) {
                                     Toast.makeText(
@@ -193,7 +202,7 @@ fun SignUpScreen(
                                         userUiState.patronymic
                                     ))
                                 )
-                                    onChangeCurrentPage()
+                                    onEvent(SignUpEvent.OnNextPage)
                                 else
                                     Toast.makeText(
                                         context,
@@ -210,14 +219,14 @@ fun SignUpScreen(
                                     onEvent(SignUpEvent.OnUpdateFirstPasswordError("Пароль должен быть не меньше 8 символов"))
                                 else onEvent(SignUpEvent.OnUpdateFirstPasswordError(""))
                                 if (userUiState.firstPassword == userUiState.secondPassword && userUiState.firstPassword.length >= 8)
-                                    onChangeCurrentPage()
+                                    onEvent(SignUpEvent.OnNextPage)
                             }
 
                             0 -> {
-                                onEvent(SignUpEvent.OnCheckEmailIsValid(email = userUiState.email, onComplete = { onChangeCurrentPage() }))
+                                onEvent(SignUpEvent.OnCheckEmailIsValid(email = userUiState.email))
                             }
 
-                            else -> onChangeCurrentPage()
+                            else -> onEvent(SignUpEvent.OnNextPage)
                         }
                     },
                     enabled =
@@ -697,13 +706,12 @@ fun TextInput(
 fun SignUpScreenPreview() {
     AesculapiusTheme {
         SignUpScreen(
-            onChangeCurrentPage = {},
             userUiState = SignUpUiState(),
-            currentPage = 1,
             onEvent = {},
             onClickSetReminder = {},
             onEndRegistration = {},
-            onNavigateBack = {}
+            onNavigateBack = {},
+            uiEvent = kotlinx.coroutines.flow.emptyFlow()
         )
     }
 }

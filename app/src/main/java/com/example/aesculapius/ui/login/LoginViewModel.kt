@@ -1,6 +1,5 @@
 package com.example.aesculapius.ui.login
 
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aesculapius.R
@@ -8,9 +7,11 @@ import com.example.aesculapius.database.UserAuthRepository
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,6 +20,9 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(private val userAuthRepository: UserAuthRepository) : ViewModel() {
     private val _loginUiState: MutableStateFlow<LoginUiState> = MutableStateFlow(LoginUiState())
     val loginUiState: StateFlow<LoginUiState> = _loginUiState.asStateFlow()
+
+    private val _uiEvent = Channel<LoginUiEvent>()
+    val uiEvent = _uiEvent.receiveAsFlow()
 
     fun onLoginEvent(event: LoginEvent) {
         when (event) {
@@ -34,23 +38,25 @@ class LoginViewModel @Inject constructor(private val userAuthRepository: UserAut
                 viewModelScope.launch {
                     try {
                         userAuthRepository.login(event.login, event.password) { isSuccessful, errorMessage, userId ->
-                            if (isSuccessful)
-                                event.onEndLogin(userId)
-                            else {
-                                when (errorMessage) {
-                                    is FirebaseNetworkException ->
-                                        Toast.makeText(event.context, event.context.getString(R.string.check_internet_connection), Toast.LENGTH_SHORT).show()
+                            viewModelScope.launch {
+                                if (isSuccessful) {
+                                    _uiEvent.send(LoginUiEvent.NavigateToHome(userId))
+                                } else {
+                                    when (errorMessage) {
+                                        is FirebaseNetworkException ->
+                                            _uiEvent.send(LoginUiEvent.ShowToast(R.string.check_internet_connection))
 
-                                    is FirebaseAuthInvalidCredentialsException ->
-                                        _loginUiState.update {
-                                            it.copy(
-                                                loginError = event.context.getString(R.string.wrong_email),
-                                                passwordError = event.context.getString(R.string.wrong_password)
-                                            )
-                                        }
+                                        is FirebaseAuthInvalidCredentialsException ->
+                                            _loginUiState.update {
+                                                it.copy(
+                                                    loginError = "Неверная почта",
+                                                    passwordError = "Неверный пароль"
+                                                )
+                                            }
 
-                                    else ->
-                                        Toast.makeText(event.context, event.context.getString(R.string.something_went_wrong), Toast.LENGTH_SHORT).show()
+                                        else ->
+                                            _uiEvent.send(LoginUiEvent.ShowToast(R.string.something_went_wrong))
+                                    }
                                 }
                             }
                         }

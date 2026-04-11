@@ -1,6 +1,6 @@
 package com.example.aesculapius.ui.login
 
-import androidx.compose.foundation.layout.Box
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,11 +36,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.aesculapius.R
 import com.example.aesculapius.ui.navigation.NavigationDestination
 import com.example.aesculapius.ui.signup.SignUpScreen
-import com.example.aesculapius.ui.signup.SignUpUiState
 import com.example.aesculapius.ui.signup.TextInput
 import com.example.aesculapius.ui.theme.AesculapiusTheme
 import com.example.aesculapius.ui.theme.errorLoginField
-import com.example.aesculapius.worker.User
 
 object LoginScreen : NavigationDestination {
     override val route = "LoginScreen"
@@ -52,9 +51,19 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel()
 ) {
     val loginUiState by loginViewModel.loginUiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        loginViewModel.uiEvent.collect { event ->
+            when (event) {
+                is LoginUiEvent.NavigateToHome -> onEndLogin(event.userId)
+                is LoginUiEvent.ShowToast ->
+                    Toast.makeText(context, context.getString(event.messageRes), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     LoginScreenContent(
-        onEndLogin = onEndLogin,
         loginUiState = loginUiState,
         onLoginEvent = loginViewModel::onLoginEvent,
         navigate = navigate
@@ -64,12 +73,10 @@ fun LoginScreen(
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LoginScreenContent(
-    onEndLogin: (String) -> Unit,
     onLoginEvent: (LoginEvent) -> Unit,
     loginUiState: LoginUiState,
     navigate: (String) -> Unit
 ) {
-    val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusRequesterPassword = remember { FocusRequester() }
 
@@ -138,23 +145,12 @@ fun LoginScreenContent(
                         color = errorLoginField
                     )
                 }
-//            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-//                TextButton(onClick = {}) {
-//                    Text(
-//                        text = stringResource(R.string.recover_password),
-//                        style = MaterialTheme.typography.displaySmall,
-//                        color = MaterialTheme.colorScheme.primary
-//                    )
-//                }
-//            }
             Button(
                 onClick = {
                     onLoginEvent(
                         LoginEvent.OnClickLogin(
                             login = loginUiState.login,
-                            password = loginUiState.password,
-                            context = context,
-                            onEndLogin = onEndLogin
+                            password = loginUiState.password
                         )
                     )
                 },
