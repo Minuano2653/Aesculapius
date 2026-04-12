@@ -1,15 +1,23 @@
 package com.example.aesculapius.ui.therapy
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aesculapius.database.AesculapiusRepository
+import com.example.aesculapius.database.UserPreferencesRepository
+import com.example.aesculapius.domain.medicine.usecases.AcceptDoseUseCase
+import com.example.aesculapius.domain.medicine.usecases.AddMedicineUseCase
+import com.example.aesculapius.domain.medicine.usecases.DeleteMedicineUseCase
+import com.example.aesculapius.domain.medicine.usecases.GetMedicinesForDateUseCase
+import com.example.aesculapius.domain.medicine.usecases.GetMedicinesScoreUseCase
+import com.example.aesculapius.domain.medicine.usecases.SkipDoseUseCase
+import com.example.aesculapius.domain.medicine.usecases.UpdateMedicineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.boguszpawlowski.composecalendar.week.Week
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
@@ -17,7 +25,17 @@ import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
-class TherapyViewModel @Inject constructor(private val aesculapiusRepository: AesculapiusRepository) : ViewModel() {
+class TherapyViewModel @Inject constructor(
+    private val getMedicinesForDateUseCase: GetMedicinesForDateUseCase,
+    private val getMedicinesScoreUseCase: GetMedicinesScoreUseCase,
+    private val addMedicineUseCase: AddMedicineUseCase,
+    private val updateMedicineUseCase: UpdateMedicineUseCase,
+    private val deleteMedicineUseCase: DeleteMedicineUseCase,
+    private val acceptDoseUseCase: AcceptDoseUseCase,
+    private val skipDoseUseCase: SkipDoseUseCase,
+    private val aesculapiusRepository: AesculapiusRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
+) : ViewModel() {
 
     /** [currentDate] - при изменении выбранного дня, меняется currentDate вместе с state, который отвечает за отображение
      * дня в календаре. При изменении currentDate внутри списка не происходит recomposition,
@@ -43,7 +61,8 @@ class TherapyViewModel @Inject constructor(private val aesculapiusRepository: Ae
             is TherapyEvent.OnAcceptMedicine -> {
                 viewModelScope.launch {
                     generalLoadingState.value = GeneralLoadingState.Loading
-                    aesculapiusRepository.acceptMedicine(event.idDose)
+                    val userId = userPreferencesRepository.user.first().id ?: ""
+                    acceptDoseUseCase(userId, event.idDose)
                     updateCurrentDate(LocalDate.now())
                     generalLoadingState.value = GeneralLoadingState.Success
                 }
@@ -52,7 +71,8 @@ class TherapyViewModel @Inject constructor(private val aesculapiusRepository: Ae
             is TherapyEvent.OnSkipMedicine -> {
                 viewModelScope.launch {
                     generalLoadingState.value = GeneralLoadingState.Loading
-                    aesculapiusRepository.skipMedicine(event.idDose)
+                    val userId = userPreferencesRepository.user.first().id ?: ""
+                    skipDoseUseCase(userId, event.idDose)
                     updateCurrentDate(LocalDate.now())
                     generalLoadingState.value = GeneralLoadingState.Success
                 }
@@ -65,7 +85,9 @@ class TherapyViewModel @Inject constructor(private val aesculapiusRepository: Ae
             is TherapyEvent.OnAddMedicineItem -> {
                 viewModelScope.launch {
                     generalLoadingState.value = GeneralLoadingState.Loading
-                    aesculapiusRepository.insertMedicineItem(
+                    val userId = userPreferencesRepository.user.first().id ?: ""
+                    addMedicineUseCase(
+                        userId,
                         event.medicineType,
                         event.name,
                         event.undername,
@@ -83,7 +105,9 @@ class TherapyViewModel @Inject constructor(private val aesculapiusRepository: Ae
             is TherapyEvent.OnUpdateMedicineItem -> {
                 viewModelScope.launch {
                     generalLoadingState.value = GeneralLoadingState.Loading
-                    aesculapiusRepository.updateMedicineItem(
+                    val userId = userPreferencesRepository.user.first().id ?: ""
+                    updateMedicineUseCase(
+                        userId,
                         event.medicineId,
                         event.frequency,
                         event.dose,
@@ -99,7 +123,8 @@ class TherapyViewModel @Inject constructor(private val aesculapiusRepository: Ae
             is TherapyEvent.OnDeleteMedicineItem -> {
                 viewModelScope.launch {
                     generalLoadingState.value = GeneralLoadingState.Loading
-                    aesculapiusRepository.deleteMedicineItem(event.medicineId)
+                    val userId = userPreferencesRepository.user.first().id ?: ""
+                    deleteMedicineUseCase(userId, event.medicineId)
                     updateCurrentDate(LocalDate.now())
                     generalLoadingState.value = GeneralLoadingState.Success
                 }
@@ -127,7 +152,7 @@ class TherapyViewModel @Inject constructor(private val aesculapiusRepository: Ae
             currentDate[0] = newDate
 
             var amountDone = 0
-            val medicines = aesculapiusRepository.getMedicinesOnCurrentDate(newDate).toMutableList()
+            val medicines = getMedicinesForDateUseCase(newDate).toMutableList()
             val morningMedicines = mutableListOf<MedicineCard>()
             val eveningMedicines = mutableListOf<MedicineCard>()
             medicines.forEach { medicineWithDoses ->
@@ -182,44 +207,8 @@ class TherapyViewModel @Inject constructor(private val aesculapiusRepository: Ae
         return true
     }
 
-    // некоторые функции, вызываемые в методе, требуют асинхронного выполнения, поэтому сама функция тоже асинхронна
     suspend fun getMedicinesScore(): Double = viewModelScope.async {
-        // количество доз препаратов, для приёма
-        var amountDoses = 0.0
-        // количетсво фактически принятых доз препарата
-        var acceptedDoses = 0.0
-        val startDate = LocalDate.now().minusMonths(1)
-        val endDate = LocalDate.now()
-        // получаем все препараты на протяжении последнего месяца с их дозами
-        val medicines = aesculapiusRepository.getAllMedicinesInPeriod(startDate, endDate)
-        // для каждого препарата перебираем его дозы
-        medicines.forEach { medicineWithDoses ->
-            medicineWithDoses.doses.forEach {
-                // если доза препарата была выписана не раньше месяца назад
-                if ((it.date.isBefore(endDate) && it.date.isAfter(startDate)) || (it.date == startDate || it.date == endDate)) {
-                    // если доза принята
-                    if (it.isAccepted) {
-                        // если 1 доза то прибавляем к обоим переменным по единице
-                        if (it.dosesAmount[0] == '1') {
-                            acceptedDoses++
-                            amountDoses++
-                        }
-                        // если две дозы препараты были приняты то прибавляем к обоим переменным по двойке
-                        else if (it.dosesAmount[0] == '2') {
-                            acceptedDoses += 2
-                            amountDoses += 2
-                        }
-                    }
-                    // если доза не принята то прибавляем число только к общему числу доз
-                    else {
-                        if (it.dosesAmount[0] == '1') amountDoses++
-                        else if (it.dosesAmount[0] == '2') amountDoses += 2
-                    }
-                }
-            }
-        }
-        // если amountDoses нулевой, во избежание ошибки, возвращаем ноль, чтобы не делить на ноль
-        if (amountDoses != 0.0) acceptedDoses / amountDoses else 0.0
+        getMedicinesScoreUseCase()
     }.await()
 
     /** [getAmountNotAcceptedMedicines] - служит для отображения индикторов под датами

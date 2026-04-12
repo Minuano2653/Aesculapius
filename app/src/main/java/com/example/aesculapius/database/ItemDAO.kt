@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import com.example.aesculapius.ui.tests.MetricsItem
 import com.example.aesculapius.ui.tests.ScoreItem
+import com.example.aesculapius.ui.therapy.DoseItem
 import com.example.aesculapius.ui.therapy.MedicineItem
 import com.example.aesculapius.ui.therapy.MedicineWithDoses
 import kotlinx.coroutines.flow.Flow
@@ -92,4 +93,13 @@ interface ItemDAO {
 
     @Query("DELETE from metrics_items")
     suspend fun deleteAllMetrics()
+
+    @Query("SELECT * FROM medicines_items WHERE idMedicine = :medicineId LIMIT 1")
+    suspend fun getMedicineById(medicineId: Int): MedicineItem?
+
+    @Query("SELECT * FROM dose_items WHERE idDose = :doseId LIMIT 1")
+    suspend fun getDoseById(doseId: Int): DoseItem
+
+    @Query("SELECT * FROM dose_items WHERE medicineId = :medicineId AND date = :date AND isMorning = :isMorning LIMIT 1")
+    suspend fun getDoseByMedicineIdDateAndMorning(medicineId: Int, date: LocalDate, isMorning: Boolean): DoseItem?
 }

@@ -1,4 +1,4 @@
-package com.example.aesculapius.ui.therapy
+package com.example.aesculapius.ui.medicines
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
@@ -22,12 +22,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavOptionsBuilder
 import com.example.aesculapius.R
 import com.example.aesculapius.data.CurrentMedicineType
@@ -37,7 +37,10 @@ import com.example.aesculapius.data.medicinesTablets
 import com.example.aesculapius.ui.TopBar
 import com.example.aesculapius.ui.navigation.NavigationDestination
 import com.example.aesculapius.ui.theme.AesculapiusTheme
-import com.example.aesculapius.ui.theme.onError
+import com.example.aesculapius.ui.therapy.Medicine
+import com.example.aesculapius.ui.therapy.MedicineCard
+import com.example.aesculapius.ui.therapy.TherapyEvent
+import com.example.aesculapius.ui.therapy.TherapyScreen
 import java.time.LocalDate
 
 object EditMedicineScreen : NavigationDestination {
@@ -46,11 +49,10 @@ object EditMedicineScreen : NavigationDestination {
 
 @Composable
 fun EditMedicineScreen(
+    modifier: Modifier = Modifier,
+    medicinesListViewModel: MedicinesListViewModel = hiltViewModel<MedicinesListViewModel>(),
     onNavigateBack: () -> Unit,
-    onTherapyEvent: (TherapyEvent) -> Unit,
-    onNavigate: (String, NavOptionsBuilder.() -> Unit) -> Unit,
-    medicine: MedicineCard,
-    modifier: Modifier = Modifier
+    medicine: MedicineCard
 ) {
     val context = LocalContext.current
     val currentMedicine: MutableState<Medicine?> = remember { mutableStateOf(null) }
@@ -86,13 +88,15 @@ fun EditMedicineScreen(
         }
     }
 
-    Scaffold(topBar = {
-        TopBar(
-            onNavigateBack = onNavigateBack,
-            text = stringResource(R.string.edit_medicine),
-            existHelpButton = false
-        )
-    }) { paddingValues ->
+    Scaffold(
+        topBar = {
+            TopBar(
+                onNavigateBack = onNavigateBack,
+                text = stringResource(R.string.edit_medicine),
+                existHelpButton = false
+            )
+        }
+    ) { paddingValues ->
         Column(
             modifier = modifier.padding(
                 top = paddingValues.calculateTopPadding() + 32.dp,
@@ -126,18 +130,24 @@ fun EditMedicineScreen(
             Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = {
-                    onTherapyEvent(
-                        TherapyEvent.OnUpdateMedicineItem(
+                    medicinesListViewModel.onEvent(
+                        MedicineEvent.OnUpdateMedicineItem(
                             medicineId = medicine.id,
-                            frequency = currentMedicine.value?.frequency?.get(selectedFrequencyIndex) ?: medicine.frequency,
-                            dose = currentMedicine.value?.doses?.get(selectedDosesIndex) ?: medicine.dose,
+                            frequency = currentMedicine.value?.frequency?.get(selectedFrequencyIndex)
+                                ?: medicine.frequency,
+                            dose = currentMedicine.value?.doses?.get(selectedDosesIndex)
+                                ?: medicine.dose,
                             medicineType = medicine.medicineType,
                             startDate = medicine.startDate,
                             endDate = medicine.endDate
                         )
                     )
-                    onNavigate(TherapyScreen.route) { popUpTo(TherapyScreen.route) { inclusive = false } }
-                    Toast.makeText(context, context.getString(R.string.success_save_medicine), Toast.LENGTH_SHORT).show()
+                    onNavigateBack()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.success_save_medicine),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 },
                 modifier = Modifier
                     .padding(bottom = 17.dp)
@@ -154,11 +164,13 @@ fun EditMedicineScreen(
             }
             TextButton(
                 onClick = {
-                    onTherapyEvent(TherapyEvent.OnDeleteMedicineItem(medicine.id))
-                    onNavigate(TherapyScreen.route) {
-                        popUpTo(TherapyScreen.route) { inclusive = false }
-                    }
-                    Toast.makeText(context, context.getString(R.string.success_delete_medicine), Toast.LENGTH_SHORT).show()
+                    medicinesListViewModel.onEvent(MedicineEvent.OnDeleteMedicineItem(medicine.id))
+                    onNavigateBack()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.success_delete_medicine),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 },
                 modifier = Modifier.padding(bottom = 48.dp)
             ) {
@@ -178,8 +190,6 @@ fun PreviewEditMedicineScreen() {
     AesculapiusTheme {
         EditMedicineScreen(
             onNavigateBack = {},
-            onTherapyEvent = {},
-            onNavigate = { _, _ -> },
             medicine = MedicineCard(
                 id = 12,
                 dose = "12мг/доза",

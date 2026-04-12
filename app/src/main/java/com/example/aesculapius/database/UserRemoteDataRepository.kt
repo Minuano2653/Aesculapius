@@ -4,7 +4,6 @@ import com.example.aesculapius.data.CurrentMedicineType
 import com.example.aesculapius.ui.signup.SignUpUiState
 import com.example.aesculapius.ui.tests.MetricsItem
 import com.example.aesculapius.ui.tests.ScoreItem
-import com.example.aesculapius.ui.therapy.MedicineItem
 import com.example.aesculapius.worker.User
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.ktx.firestore
@@ -19,7 +18,10 @@ const val USERS_COLLECTION_REF = "users"
 
 /** [UserRemoteDataRepository] репозиторий для Firestore Database */
 @Singleton
-class UserRemoteDataRepository @Inject constructor(private val aesculapiusRepository: AesculapiusRepository) {
+class UserRemoteDataRepository @Inject constructor(
+    private val aesculapiusRepository: AesculapiusRepository,
+    private val itemDAO: ItemDAO
+) {
     companion object {
         val usersRef: CollectionReference = Firebase.firestore.collection(USERS_COLLECTION_REF)
         fun getUserId() = usersRef.document().id
@@ -41,21 +43,20 @@ class UserRemoteDataRepository @Inject constructor(private val aesculapiusReposi
             astTestDate = signUpUiState.astTestDate,
             recommendationTestDate = signUpUiState.recommendationTestDate,
             astTests = listOf(),
-            medicines = listOf(),
             metrics = listOf()
         )
         usersRef.document(signUpUiState.id!!).set(user)
     }
 
     /**
-     * [pullUserData] извлечение информации о пользователе через id
+     * [pullUserData] извлечение информации о пользователе через id.
+     * Препараты читаются из subcollection medicines/{medicineId}/doses/{doseDocId}.
      */
     suspend fun pullUserData(userId: String): User {
         if (userId.isEmpty()) return User()
         var user = User()
         usersRef.document(userId).get()
             .addOnSuccessListener {
-
                 val metrics = mutableListOf<MetricsItem>()
                 val metricsList = it["metrics"] as? List<HashMap<String, Any>>
                 metricsList?.forEach { metricsItem ->
@@ -80,22 +81,6 @@ class UserRemoteDataRepository @Inject constructor(private val aesculapiusReposi
                     )
                 }
 
-                val medicines = mutableListOf<MedicineItem>()
-                val medicinesList = it["medicines"] as? List<HashMap<String, Any>>
-                medicinesList?.forEach { medicineItem ->
-                    medicines.add(
-                        MedicineItem(
-                            idMedicine = (medicineItem["id"] as? Long)!!.toInt(),
-                            dose = (medicineItem["dose"] as? String)!!,
-                            startDate = LocalDate.parse(medicineItem["startDate"] as? String),
-                            endDate = LocalDate.parse(medicineItem["endDate"] as? String),
-                            frequency = (medicineItem["frequency"] as? String)!!,
-                            medicineType = CurrentMedicineType.valueOf((medicineItem["medicineType"] as? String)!!),
-                            name = (medicineItem["name"] as? String)!!,
-                            undername = (medicineItem["undername"] as? String)!!
-                        )
-                    )
-                }
                 user = User(
                     name = (it["name"] as? String)!!,
                     surname = (it["surname"] as? String)!!,
@@ -107,11 +92,41 @@ class UserRemoteDataRepository @Inject constructor(private val aesculapiusReposi
                     eveningReminder = (it["eveningReminder"] as? String)!!,
                     recommendationTestDate = (it["recommendationTestDate"] as? String)!!,
                     astTestDate = (it["astTestDate"] as? String)!!,
-                    medicines = medicines,
                     metrics = metrics,
                     astTests = astTests
                 )
             }.await()
+
+        // Восстанавливаем препараты из subcollection
+        val medicinesSnapshot = usersRef.document(userId).collection("medicines").get().await()
+        for (medicineDoc in medicinesSnapshot.documents) {
+            val medicineId = medicineDoc.id.toIntOrNull() ?: continue
+            aesculapiusRepository.insertMedicineItem(
+                medicineType = CurrentMedicineType.valueOf(medicineDoc["medicineType"] as? String ?: "Aerosol"),
+                name = (medicineDoc["name"] as? String) ?: "",
+                undername = (medicineDoc["undername"] as? String) ?: "",
+                dose = (medicineDoc["dose"] as? String) ?: "",
+                frequency = (medicineDoc["frequency"] as? String) ?: "",
+                startDate = LocalDate.parse(medicineDoc["startDate"] as? String ?: LocalDate.now().toString()),
+                endDate = LocalDate.parse(medicineDoc["endDate"] as? String ?: LocalDate.now().plusMonths(1).toString())
+            )
+
+            // Восстанавливаем статусы доз
+            val dosesSnapshot = medicineDoc.reference.collection("doses").get().await()
+            for (doseDoc in dosesSnapshot.documents) {
+                val dateStr = doseDoc["date"] as? String ?: continue
+                val isMorning = doseDoc["isMorning"] as? Boolean ?: continue
+                val date = LocalDate.parse(dateStr)
+                val isAccepted = doseDoc["isAccepted"] as? Boolean ?: false
+                val isSkipped = doseDoc["isSkipped"] as? Boolean ?: false
+                val dose = itemDAO.getDoseByMedicineIdDateAndMorning(medicineId, date, isMorning)
+                if (dose != null) {
+                    if (isAccepted) itemDAO.acceptMedicine(dose.idDose)
+                    else if (isSkipped) itemDAO.skipMedicine(dose.idDose)
+                }
+            }
+        }
+
         return user
     }
 
@@ -156,7 +171,8 @@ class UserRemoteDataRepository @Inject constructor(private val aesculapiusReposi
     }
 
     /**
-     * [updateUser] переносит статистику пользователя в Firestore Database по его userId
+     * [updateUser] синхронизирует метрики и результаты тестов в Firestore.
+     * Препараты синхронизируются в реальном времени через RemoteMedicineDataSource.
      */
     suspend fun updateUser(userId: String) {
         val metricsList = aesculapiusRepository.getAllMetrics().map { metricsItem ->
@@ -173,20 +189,8 @@ class UserRemoteDataRepository @Inject constructor(private val aesculapiusReposi
                 "date" to scoreItem.date.toString()
             )
         }
-        val medicinesList = aesculapiusRepository.getAllMedicines().map { medicineItem ->
-            hashMapOf(
-                "id" to medicineItem.idMedicine,
-                "name" to medicineItem.name,
-                "undername" to medicineItem.undername,
-                "dose" to medicineItem.dose,
-                "startDate" to medicineItem.startDate.toString(),
-                "endDate" to medicineItem.endDate.toString(),
-                "frequency" to medicineItem.frequency,
-                "medicineType" to medicineItem.medicineType.toString()
-            )
-        }
 
         usersRef.document(userId)
-            .update("medicines", medicinesList, "metrics", metricsList, "astTests", astTestsList)
+            .update("metrics", metricsList, "astTests", astTestsList)
     }
 }

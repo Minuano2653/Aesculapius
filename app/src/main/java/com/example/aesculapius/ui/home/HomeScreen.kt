@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +32,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,10 +58,11 @@ import com.example.aesculapius.ui.signup.SignUpUiState
 import com.example.aesculapius.ui.statistics.StatisticsViewModel
 import com.example.aesculapius.ui.tests.TestsViewModel
 import com.example.aesculapius.ui.theme.tertiaryContainer
-import com.example.aesculapius.ui.therapy.EditMedicineScreen
+import com.example.aesculapius.ui.medicines.EditMedicineScreen
 import com.example.aesculapius.ui.therapy.MedicineCard
 import com.example.aesculapius.ui.therapy.TherapyEvent
 import com.example.aesculapius.ui.therapy.TherapyScreen
+import com.example.aesculapius.ui.medicines.MedicinesListViewModel
 import com.example.aesculapius.ui.therapy.TherapyViewModel
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import kotlinx.coroutines.launch
@@ -74,10 +73,11 @@ fun HomeScreen(
     onProfileEvent: (ProfileEvent) -> Unit,
     userUiState: SignUpUiState,
 ) {
-    val context = LocalContext.current
     val therapyViewModel: TherapyViewModel = hiltViewModel()
     val testsViewModel: TestsViewModel = hiltViewModel()
     val statisticsViewModel: StatisticsViewModel = hiltViewModel()
+
+    val selectedMedicineFromProfile: MutableState<MedicineCard?> = remember { mutableStateOf(null) }
 
     var isBarsDisplayed by remember { mutableStateOf(true) }
     val currentMedicineItem: MutableState<MedicineCard?> = remember { mutableStateOf(null) }
@@ -95,10 +95,6 @@ fun HomeScreen(
             if (currentMedicineItem.value != null)
                 EditMedicineSheet(
                     medicine = currentMedicineItem.value!!,
-                    navigateToEditMedicineScreen = {
-                        scope.launch { sheetState.hide() }
-                        navController.navigate(EditMedicineScreen.route)
-                    },
                     skipMedicine = {
                         scope.launch { sheetState.hide() }
                         therapyViewModel.onTherapyEvent(TherapyEvent.OnSkipMedicine(it))
@@ -146,11 +142,9 @@ fun HomeScreen(
                             currentMedicineItem.value = it
                             scope.launch { sheetState.show() }
                         },
-                        medicine = currentMedicineItem.value,
                         navController = navController,
                         therapyViewModel = therapyViewModel,
                         turnOnBars = { isBarsDisplayed = true },
-                        turnOffBars = { isBarsDisplayed = false }
                     )
 
                     profileNavGraph(
@@ -161,6 +155,8 @@ fun HomeScreen(
                         onProfileEvent = onProfileEvent,
                         getTestsScore = testsViewModel::getTestsScore,
                         getMedicinesScore = therapyViewModel::getMedicinesScore,
+                        selectedMedicine = selectedMedicineFromProfile.value,
+                        onMedicineSelected = { selectedMedicineFromProfile.value = it }
                     )
 
                     statisticsNavGraph(
@@ -240,7 +236,6 @@ fun BottomNavigationBar(
 fun EditMedicineSheet(
     acceptMedicine: (Int) -> Unit,
     skipMedicine: (Int) -> Unit,
-    navigateToEditMedicineScreen: () -> Unit,
     medicine: MedicineCard,
     modifier: Modifier = Modifier
 ) {
@@ -261,10 +256,6 @@ fun EditMedicineSheet(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primaryContainer
                 )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = navigateToEditMedicineScreen) {
-                Icon(painterResource(id = R.drawable.edit_icon), contentDescription = null)
             }
         }
         Row(modifier = Modifier.padding(top = 16.dp)) {

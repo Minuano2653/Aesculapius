@@ -2,8 +2,6 @@ package com.example.aesculapius.worker
 
 import com.example.aesculapius.ui.tests.MetricsItem
 import com.example.aesculapius.ui.tests.ScoreItem
-import com.example.aesculapius.ui.therapy.MedicineItem
-import java.time.LocalDate
 
 data class User(
     val name: String = "",
@@ -16,7 +14,6 @@ data class User(
     val eveningReminder: String = "",
     val recommendationTestDate: String = "",
     val astTestDate: String = "",
-    val medicines: List<MedicineItem> = listOf(),
     val metrics: List<MetricsItem> = listOf(),
     val astTests: List<ScoreItem> = listOf()
 )

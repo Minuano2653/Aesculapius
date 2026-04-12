@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.aesculapius.R
 import com.example.aesculapius.data.learnList
+import com.example.aesculapius.ui.medicines.MedicinesListScreen
 import com.example.aesculapius.ui.navigation.NavigationDestination
 import com.example.aesculapius.ui.theme.AesculapiusTheme
 import com.google.common.primitives.Doubles.min
@@ -127,6 +128,20 @@ fun ProfileScreen(
                 image = R.drawable.timer_icon,
                 name = stringResource(id = R.string.set_reminders),
                 onClick = { onNavigate(SetReminderTimeProfile.route) }
+            )
+        }
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigate(MedicinesListScreen.route) }
+                .padding(top = 24.dp),
+            elevation = 0.dp
+        ) {
+            SingleItem(
+                image = R.drawable.therapy_icon,
+                name = stringResource(id = R.string.my_medicines),
+                onClick = { onNavigate(MedicinesListScreen.route) }
             )
         }
         Spacer(modifier = Modifier.weight(1f))

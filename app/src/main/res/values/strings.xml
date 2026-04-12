@@ -245,4 +245,7 @@
     <string name="new_user">Я новый пользователь</string>
     <string name="login">Войти</string>
     <string name="your_helper_with_asthma">Твой помощник в борьбе с астмой</string>
+    <string name="my_medicines">Мои препараты</string>
+    <string name="add_medicine">Добавить препарат</string>
+    <string name="medicines_list_empty">Препараты не добавлены</string>
 </resources>

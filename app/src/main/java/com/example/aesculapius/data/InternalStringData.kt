@@ -36,7 +36,7 @@ val navigationItemContentList = listOf(
     ),
     NavigationItemContent(
         pageType = TherapyScreen.route,
-        icon = R.drawable.therapy_icon
+        icon = R.drawable.calendar_icon
     ),
     NavigationItemContent(
         pageType = TestsScreen.route,

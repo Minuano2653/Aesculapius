@@ -2,6 +2,8 @@ package com.example.aesculapius.ui.navigation
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -13,6 +15,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.aesculapius.R
 import com.example.aesculapius.data.Hours
+import com.example.aesculapius.ui.medicines.EditMedicineFromProfile
+import com.example.aesculapius.ui.medicines.MedicinesListScreen
+import com.example.aesculapius.ui.medicines.MedicinesListViewModel
+import com.example.aesculapius.ui.medicines.NewMedicineFromProfile
 import com.example.aesculapius.ui.profile.EditProfileScreen
 import com.example.aesculapius.ui.profile.LearnItemScreen
 import com.example.aesculapius.ui.profile.LearnScreen
@@ -22,7 +28,9 @@ import com.example.aesculapius.ui.profile.SetReminderTimeProfile
 import com.example.aesculapius.ui.signup.SetReminderTime
 import com.example.aesculapius.ui.signup.SetReminderTimeScreen
 import com.example.aesculapius.ui.signup.SignUpUiState
-import java.time.LocalDate
+import com.example.aesculapius.ui.medicines.EditMedicineScreen
+import com.example.aesculapius.ui.therapy.MedicineCard
+import com.example.aesculapius.ui.medicines.NewMedicineScreen
 import java.time.format.DateTimeFormatter
 
 fun NavGraphBuilder.profileNavGraph(
@@ -32,7 +40,9 @@ fun NavGraphBuilder.profileNavGraph(
     onProfileEvent: (ProfileEvent) -> Unit,
     navController: NavHostController,
     getTestsScore: suspend () -> Pair<Double, Double>,
-    getMedicinesScore: suspend () -> Double
+    getMedicinesScore: suspend () -> Double,
+    selectedMedicine: MedicineCard?,
+    onMedicineSelected: (MedicineCard) -> Unit
 ) {
     composable(route = ProfileScreen.route) {
         ProfileScreen(
@@ -123,6 +133,34 @@ fun NavGraphBuilder.profileNavGraph(
             onNavigateBack = { navController.navigateUp() },
             name = stringResource(id = arg[0]),
             text = stringResource(id = arg[1])
+        )
+        turnOffBars()
+    }
+
+    // ─── Управление препаратами из профиля ───────────────────────────────────
+    composable(route = MedicinesListScreen.route) {
+        MedicinesListScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onNavigateToEdit = { card ->
+                onMedicineSelected(card)
+                navController.navigate(EditMedicineFromProfile.route)
+            },
+            onNavigateToNew = { navController.navigate(NewMedicineFromProfile.route) }
+        )
+        turnOffBars()
+    }
+
+    composable(route = EditMedicineFromProfile.route) {
+        EditMedicineScreen(
+            medicine = selectedMedicine!!,
+            onNavigateBack = { navController.navigateUp() },
+        )
+        turnOffBars()
+    }
+
+    composable(route = NewMedicineFromProfile.route) {
+        NewMedicineScreen(
+            onNavigateBack = { navController.navigateUp() },
         )
         turnOffBars()
     }

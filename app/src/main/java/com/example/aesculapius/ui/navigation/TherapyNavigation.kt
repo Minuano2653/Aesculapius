@@ -8,18 +8,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import com.example.aesculapius.ui.therapy.EditMedicineScreen
+import com.example.aesculapius.ui.medicines.EditMedicineScreen
 import com.example.aesculapius.ui.therapy.MedicineCard
-import com.example.aesculapius.ui.therapy.NewMedicineScreen
+import com.example.aesculapius.ui.medicines.NewMedicineScreen
 import com.example.aesculapius.ui.therapy.TherapyScreen
 import com.example.aesculapius.ui.therapy.TherapyViewModel
 import java.time.LocalDate
 
 fun NavGraphBuilder.therapyNavGraph(
-    turnOffBars: () -> Unit,
     turnOnBars: () -> Unit,
     onClickMedicine: (MedicineCard) -> Unit,
-    medicine: MedicineCard?,
     therapyViewModel: TherapyViewModel,
     navController: NavHostController
 ) {
@@ -44,22 +42,5 @@ fun NavGraphBuilder.therapyNavGraph(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         turnOnBars()
-    }
-    composable(route = EditMedicineScreen.route) {
-        EditMedicineScreen(
-            medicine = medicine!!,
-            onNavigateBack = navController::navigateUp,
-            onNavigate = navController::navigate,
-            onTherapyEvent = therapyViewModel::onTherapyEvent
-        )
-        turnOffBars()
-    }
-    composable(route = NewMedicineScreen.route) {
-        NewMedicineScreen(
-            onNavigateBack = navController::navigateUp,
-            onNavigate = navController::navigate,
-            onTherapyEvent = therapyViewModel::onTherapyEvent
-        )
-        turnOffBars()
     }
 }
