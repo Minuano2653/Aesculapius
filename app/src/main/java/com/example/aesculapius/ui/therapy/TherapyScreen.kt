@@ -33,7 +33,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -63,6 +61,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.aesculapius.R
 import com.example.aesculapius.data.CurrentMedicineType
+import com.example.aesculapius.ui.medicines.NewMedicineScreen
 import com.example.aesculapius.ui.navigation.NavigationDestination
 import com.example.aesculapius.ui.theme.AesculapiusTheme
 import com.example.aesculapius.ui.theme.onErrorContainer
@@ -417,30 +416,6 @@ fun TherapyScreen(
                 }
             }
         }
-        FloatingButton(
-            onClick = { onNavigate(NewMedicineScreen.route) },
-            modifier = Modifier.align(Alignment.BottomEnd)
-        )
-    }
-}
-
-@Composable
-fun FloatingButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    FloatingActionButton(
-        onClick = onClick,
-        modifier = modifier
-            .padding(16.dp)
-            .size(56.dp),
-        containerColor = MaterialTheme.colorScheme.primary,
-        elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 0.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Icon(
-            imageVector = Icons.Default.Add,
-            tint = MaterialTheme.colorScheme.tertiaryContainer,
-            modifier = Modifier.size(24.dp),
-            contentDescription = null
-        )
     }
 }
 
