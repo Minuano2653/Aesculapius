@@ -3,6 +3,7 @@ package com.example.aesculapius.database
 import androidx.room.Dao
 import androidx.room.Query
 import com.example.aesculapius.ui.tests.MetricsItem
+import com.example.aesculapius.ui.tests.RecommendationItem
 import com.example.aesculapius.ui.tests.ScoreItem
 import com.example.aesculapius.ui.therapy.DoseItem
 import com.example.aesculapius.ui.therapy.MedicineItem
@@ -102,4 +103,10 @@ interface ItemDAO {
 
     @Query("SELECT * FROM dose_items WHERE medicineId = :medicineId AND date = :date AND isMorning = :isMorning LIMIT 1")
     suspend fun getDoseByMedicineIdDateAndMorning(medicineId: Int, date: LocalDate, isMorning: Boolean): DoseItem?
+
+    @Query("INSERT INTO recommendation_items VALUES(NULL, :score, :date)")
+    suspend fun insertRecommendationScore(date: LocalDate, score: Int)
+
+    @Query("SELECT * FROM recommendation_items")
+    suspend fun getAllRecommendationResults(): List<RecommendationItem>
 }

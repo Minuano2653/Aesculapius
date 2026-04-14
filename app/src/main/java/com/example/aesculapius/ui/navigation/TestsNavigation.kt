@@ -68,7 +68,7 @@ fun NavGraphBuilder.testsNavGraph(
                 onNavigateBack = { navController.navigateUp() },
                 onClickSummary = {
                     onProfileEvent(ProfileEvent.OnSaveAstTestDate(LocalDate.now().plusMonths(1)))
-                    testsViewModel.onTestsEvent(TestsEvent.OnUpdateSummaryScore(it, true))
+                    testsViewModel.onTestsEvent(TestsEvent.OnUpdateSummaryScore(userUiState.id ?: "", it, true))
                     navController.navigate(AstTestResult.route) {
                         popUpTo(TestsScreen.route) { inclusive = false }
                     }
@@ -82,7 +82,7 @@ fun NavGraphBuilder.testsNavGraph(
                 onNavigateBack = { navController.navigateUp() },
                 onClickSummary = {
                     onProfileEvent(ProfileEvent.OnSaveRecommendationTestDate(LocalDate.now().plusMonths(1)))
-                    testsViewModel.onTestsEvent(TestsEvent.OnUpdateSummaryScore(it, false))
+                    testsViewModel.onTestsEvent(TestsEvent.OnUpdateSummaryScore(userUiState.id ?: "", it, false))
                     navController.navigate(RecommendationsTestResult.route) {
                         popUpTo(TestsScreen.route) { inclusive = false }
                     }

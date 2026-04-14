@@ -7,7 +7,6 @@ import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aesculapius.database.AesculapiusRepository
 import com.example.aesculapius.database.Converters
 import com.example.aesculapius.database.UserPreferencesRepository
 import com.example.aesculapius.database.UserRemoteDataRepository
@@ -27,7 +26,6 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val prefRepository: UserPreferencesRepository,
     private val userRemoteDataRepository: UserRemoteDataRepository,
-    private val aesculapiusRepository: AesculapiusRepository,
     private val application: Application
 ) : ViewModel() {
     private val morningAlarmManager =
@@ -103,12 +101,7 @@ class ProfileViewModel @Inject constructor(
                         recommendationTestDate = user.recommendationTestDate
                     )
                 )
-                user.metrics.forEach {
-                    aesculapiusRepository.insertMetrics(it.metrics, it.date)
-                }
-                user.astTests.forEach {
-                    aesculapiusRepository.insertAstTestScore(it.date, it.score)
-                }
+
             }
         }
     }

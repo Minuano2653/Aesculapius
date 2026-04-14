@@ -10,10 +10,9 @@ import com.example.aesculapius.ui.signup.SignUpUiState
 
 fun NavGraphBuilder.statisticsNavGraph(
     userUiState: SignUpUiState,
-    statisticsViewModel: StatisticsViewModel,
     modifier: Modifier = Modifier
 ) {
     composable(route = StatisticsScreen.route) {
-        StatisticsScreen(userUiState = userUiState, statisticsViewModel = statisticsViewModel, modifier = modifier)
+        StatisticsScreen(userUiState = userUiState, modifier = modifier)
     }
 }

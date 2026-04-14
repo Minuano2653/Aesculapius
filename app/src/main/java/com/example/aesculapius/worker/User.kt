@@ -1,8 +1,5 @@
 package com.example.aesculapius.worker
 
-import com.example.aesculapius.ui.tests.MetricsItem
-import com.example.aesculapius.ui.tests.ScoreItem
-
 data class User(
     val name: String = "",
     val surname: String = "",
@@ -13,7 +10,5 @@ data class User(
     val morningReminder: String = "",
     val eveningReminder: String = "",
     val recommendationTestDate: String = "",
-    val astTestDate: String = "",
-    val metrics: List<MetricsItem> = listOf(),
-    val astTests: List<ScoreItem> = listOf()
+    val astTestDate: String = ""
 )

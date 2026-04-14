@@ -1,9 +1,8 @@
 package com.example.aesculapius.database
 
 import com.example.aesculapius.data.CurrentMedicineType
+import com.example.aesculapius.data.tests.remote.RemoteTestDataSource
 import com.example.aesculapius.ui.signup.SignUpUiState
-import com.example.aesculapius.ui.tests.MetricsItem
-import com.example.aesculapius.ui.tests.ScoreItem
 import com.example.aesculapius.worker.User
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.ktx.firestore
@@ -20,7 +19,8 @@ const val USERS_COLLECTION_REF = "users"
 @Singleton
 class UserRemoteDataRepository @Inject constructor(
     private val aesculapiusRepository: AesculapiusRepository,
-    private val itemDAO: ItemDAO
+    private val itemDAO: ItemDAO,
+    private val remoteTestDataSource: RemoteTestDataSource
 ) {
     companion object {
         val usersRef: CollectionReference = Firebase.firestore.collection(USERS_COLLECTION_REF)
@@ -41,63 +41,54 @@ class UserRemoteDataRepository @Inject constructor(
             morningReminder = signUpUiState.morningReminder.toString(),
             eveningReminder = signUpUiState.eveningReminder.toString(),
             astTestDate = signUpUiState.astTestDate,
-            recommendationTestDate = signUpUiState.recommendationTestDate,
-            astTests = listOf(),
-            metrics = listOf()
+            recommendationTestDate = signUpUiState.recommendationTestDate
         )
         usersRef.document(signUpUiState.id!!).set(user)
     }
 
     /**
      * [pullUserData] извлечение информации о пользователе через id.
-     * Препараты читаются из subcollection medicines/{medicineId}/doses/{doseDocId}.
+     * Тесты и метрики читаются из подколлекций, препараты — из subcollection medicines.
      */
     suspend fun pullUserData(userId: String): User {
         if (userId.isEmpty()) return User()
         var user = User()
+
+        // 1. Читаем базовые поля профиля пользователя
         usersRef.document(userId).get()
-            .addOnSuccessListener {
-                val metrics = mutableListOf<MetricsItem>()
-                val metricsList = it["metrics"] as? List<HashMap<String, Any>>
-                metricsList?.forEach { metricsItem ->
-                    metrics.add(
-                        MetricsItem(
-                            id = (metricsItem["id"] as? Long)!!.toInt(),
-                            metrics = (metricsItem["metrics"] as? Double)!!.toFloat(),
-                            date = LocalDate.parse(metricsItem["date"] as? String)
-                        )
-                    )
-                }
-
-                val astTests = mutableListOf<ScoreItem>()
-                val astTestsList = it["astTests"] as? List<HashMap<String, Any>>
-                astTestsList?.forEach { scoreItem ->
-                    astTests.add(
-                        ScoreItem(
-                            id = (scoreItem["id"] as? Long)!!.toInt(),
-                            score = (scoreItem["score"] as? Long)!!.toInt(),
-                            date = LocalDate.parse(scoreItem["date"] as? String)
-                        )
-                    )
-                }
-
+            .addOnSuccessListener { doc ->
                 user = User(
-                    name = (it["name"] as? String)!!,
-                    surname = (it["surname"] as? String)!!,
-                    patronymic = (it["patronymic"] as? String)!!,
-                    height = (it["height"] as? Double)!!.toFloat(),
-                    weight = (it["weight"] as? Double)!!.toFloat(),
-                    birthDate = (it["birthDate"] as? String)!!,
-                    morningReminder = (it["morningReminder"] as? String)!!,
-                    eveningReminder = (it["eveningReminder"] as? String)!!,
-                    recommendationTestDate = (it["recommendationTestDate"] as? String)!!,
-                    astTestDate = (it["astTestDate"] as? String)!!,
-                    metrics = metrics,
-                    astTests = astTests
+                    name = (doc["name"] as? String) ?: "",
+                    surname = (doc["surname"] as? String) ?: "",
+                    patronymic = (doc["patronymic"] as? String) ?: "",
+                    height = (doc["height"] as? Double)?.toFloat() ?: 0f,
+                    weight = (doc["weight"] as? Double)?.toFloat() ?: 0f,
+                    birthDate = (doc["birthDate"] as? String) ?: "",
+                    morningReminder = (doc["morningReminder"] as? String) ?: "",
+                    eveningReminder = (doc["eveningReminder"] as? String) ?: "",
+                    recommendationTestDate = (doc["recommendationTestDate"] as? String) ?: "",
+                    astTestDate = (doc["astTestDate"] as? String) ?: ""
                 )
             }.await()
 
-        // Восстанавливаем препараты из subcollection
+        // 2. Восстанавливаем AST-тесты из подколлекции
+        remoteTestDataSource.fetchAstTests(userId).forEach { item ->
+            if (itemDAO.getAllAstResultsInRange(item.date, item.date).isEmpty())
+                itemDAO.insertASTTestScore(item.date, item.score)
+        }
+
+        // 3. Восстанавливаем метрики пикфлоуметрии из подколлекции
+        remoteTestDataSource.fetchPeakFlow(userId).forEach { item ->
+            if (itemDAO.getAllMetricsWithDate(item.date).isEmpty())
+                itemDAO.insertMetrics(item.metrics, item.date)
+        }
+
+        // 4. Восстанавливаем тесты приверженности из подколлекции
+        remoteTestDataSource.fetchRecommendationTests(userId).forEach { item ->
+            itemDAO.insertRecommendationScore(item.date, item.score)
+        }
+
+        // 5. Восстанавливаем препараты из subcollection medicines
         val medicinesSnapshot = usersRef.document(userId).collection("medicines").get().await()
         for (medicineDoc in medicinesSnapshot.documents) {
             val medicineId = medicineDoc.id.toIntOrNull() ?: continue
@@ -171,26 +162,13 @@ class UserRemoteDataRepository @Inject constructor(
     }
 
     /**
-     * [updateUser] синхронизирует метрики и результаты тестов в Firestore.
-     * Препараты синхронизируются в реальном времени через RemoteMedicineDataSource.
+     * [updateUser] резервная синхронизация тестов и метрик в Firestore через подколлекции.
+     * Вызывается воркером раз в 30 минут как fallback.
      */
     suspend fun updateUser(userId: String) {
-        val metricsList = aesculapiusRepository.getAllMetrics().map { metricsItem ->
-            hashMapOf(
-                "id" to metricsItem.id,
-                "metrics" to metricsItem.metrics,
-                "date" to metricsItem.date.toString()
-            )
-        }
-        val astTestsList = aesculapiusRepository.getAllAstResults().map { scoreItem ->
-            hashMapOf(
-                "id" to scoreItem.id,
-                "score" to scoreItem.score,
-                "date" to scoreItem.date.toString()
-            )
-        }
-
-        usersRef.document(userId)
-            .update("metrics", metricsList, "astTests", astTestsList)
+        if (userId.isEmpty()) return
+        remoteTestDataSource.syncAllAstTests(userId, aesculapiusRepository.getAllAstResults())
+        remoteTestDataSource.syncAllPeakFlow(userId, aesculapiusRepository.getAllMetrics())
+        remoteTestDataSource.syncAllRecommendationTests(userId, itemDAO.getAllRecommendationResults())
     }
 }

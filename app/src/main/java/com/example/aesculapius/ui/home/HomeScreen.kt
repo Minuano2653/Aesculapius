@@ -75,7 +75,6 @@ fun HomeScreen(
 ) {
     val therapyViewModel: TherapyViewModel = hiltViewModel()
     val testsViewModel: TestsViewModel = hiltViewModel()
-    val statisticsViewModel: StatisticsViewModel = hiltViewModel()
 
     val selectedMedicineFromProfile: MutableState<MedicineCard?> = remember { mutableStateOf(null) }
 
@@ -164,7 +163,6 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .wrapContentHeight()
                             .background(color = tertiaryContainer),
-                        statisticsViewModel = statisticsViewModel,
                         userUiState = userUiState
                     )
 

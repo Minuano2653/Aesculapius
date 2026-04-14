@@ -139,10 +139,10 @@ fun MetricsTestScreen(
                             val now = LocalDateTime.now()
                             if (now.isAfter(userUiState.morningReminder) && now.isBefore(userUiState.morningReminder.plusMinutes(6))) {
                                 onProfileEvent(ProfileEvent.OnSaveMorningTime(now.plusDays(1)))
-                                onTestsEvent(TestsEvent.OnInsertNewMetrics(temp1, temp2, temp3))
+                                onTestsEvent(TestsEvent.OnInsertNewMetrics(userUiState.id ?: "", temp1, temp2, temp3))
                             } else {
                                 onProfileEvent(ProfileEvent.OnSaveEveningTime(now.plusDays(1)))
-                                onTestsEvent(TestsEvent.OnUpdateNewMetrics(temp1, temp2, temp3))
+                                onTestsEvent(TestsEvent.OnUpdateNewMetrics(userUiState.id ?: "", temp1, temp2, temp3))
                             }
                             navigate(TestsScreen.route) {
                                 popUpTo(TestsScreen.route) { inclusive = false }
