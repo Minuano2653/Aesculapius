@@ -152,8 +152,6 @@ fun HomeScreen(
                         userUiState = userUiState,
                         navController = navController,
                         onProfileEvent = onProfileEvent,
-                        getTestsScore = testsViewModel::getTestsScore,
-                        getMedicinesScore = therapyViewModel::getMedicinesScore,
                         selectedMedicine = selectedMedicineFromProfile.value,
                         onMedicineSelected = { selectedMedicineFromProfile.value = it }
                     )

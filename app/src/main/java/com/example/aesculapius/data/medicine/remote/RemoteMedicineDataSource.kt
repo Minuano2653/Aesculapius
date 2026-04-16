@@ -1,8 +1,8 @@
 package com.example.aesculapius.data.medicine.remote
 
-import com.example.aesculapius.data.CurrentMedicineType
-import com.example.aesculapius.database.UserRemoteDataRepository.Companion.usersRef
+import com.example.aesculapius.database.USERS_COLLECTION_REF
 import com.example.aesculapius.ui.therapy.MedicineItem
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
@@ -11,7 +11,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class RemoteMedicineDataSource @Inject constructor() {
+class RemoteMedicineDataSource @Inject constructor(
+    firestore: FirebaseFirestore
+) {
+    private val usersRef = firestore.collection(USERS_COLLECTION_REF)
+
 
     private fun medicinesRef(userId: String) =
         usersRef.document(userId).collection("medicines")

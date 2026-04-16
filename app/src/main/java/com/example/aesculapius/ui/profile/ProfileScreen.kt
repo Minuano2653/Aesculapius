@@ -1,6 +1,5 @@
 package com.example.aesculapius.ui.profile
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,17 +13,9 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -33,15 +24,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.aesculapius.R
 import com.example.aesculapius.data.learnList
+import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.ui.medicines.MedicinesListScreen
 import com.example.aesculapius.ui.navigation.NavigationDestination
 import com.example.aesculapius.ui.theme.AesculapiusTheme
 import com.google.common.primitives.Doubles.min
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.time.Duration
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 import kotlin.math.abs
 
 object ProfileScreen : NavigationDestination {
@@ -50,36 +37,12 @@ object ProfileScreen : NavigationDestination {
 
 @Composable
 fun ProfileScreen(
-    userRegisterDate: LocalDate,
+    activityState: UserActivityResult,
     onNavigate: (String) -> Unit,
-    getMedicinesScore: suspend () -> Double,
-    getTestsScore: suspend () -> Pair<Double, Double>,
     modifier: Modifier = Modifier
 ) {
-    var mainScore by remember { mutableDoubleStateOf(0.0) }
-
-    var medicinesScore by remember { mutableDoubleStateOf(0.0) }
-    var astTestScore by remember { mutableDoubleStateOf(0.0) }
-    var metricsScore by remember { mutableDoubleStateOf(0.0) }
-
-    LaunchedEffect(key1 = Unit) {
-        mainScore =
-            // если с момента регистрации пользователя в системе прошлло 30 и более дней, выводим математику
-            if (ChronoUnit.DAYS.between(userRegisterDate, LocalDate.now()) >= 30) {
-                withContext(Dispatchers.IO) {
-                    val temp = getTestsScore()
-                    astTestScore = temp.first
-                    metricsScore = temp.second
-                    medicinesScore = getMedicinesScore()
-                    (astTestScore + metricsScore + medicinesScore + 1) * 2.5
-                }
-            }
-            // иначе делаем показатель равным -1 и пока не отображаем его для пользователя
-            else -1.0
-    }
-
     Column(modifier = modifier.fillMaxSize()) {
-        if (mainScore > 0)
+        if (activityState.mainScore > 0)
             Card(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
@@ -87,7 +50,13 @@ fun ProfileScreen(
                     .padding(bottom = 24.dp),
                 elevation = 0.dp
             ) {
-                YourActivity(metricsScore = metricsScore, astTestScore = astTestScore, medicinesScore = medicinesScore, score = mainScore, navigate = onNavigate)
+                YourActivity(
+                    metricsScore = activityState.metricsScore,
+                    astTestScore = activityState.astTestScore,
+                    medicinesScore = activityState.medicinesScore,
+                    score = activityState.mainScore,
+                    navigate = onNavigate
+                )
             }
 
         Card(
@@ -310,10 +279,13 @@ fun SingleItem(image: Int, name: String, onClick: () -> Unit = {}) {
 fun ProfileScreenPreview() {
     AesculapiusTheme {
         ProfileScreen(
-            onNavigate = {},
-            getMedicinesScore = { 3.3 },
-            getTestsScore = { Pair(3.3, 4.5) },
-            userRegisterDate = LocalDate.now().minusMonths(2)
+            activityState = UserActivityResult(
+                mainScore = 7.5,
+                astTestScore = 0.8,
+                metricsScore = 0.7,
+                medicinesScore = 0.5
+            ),
+            onNavigate = {}
         )
     }
 }

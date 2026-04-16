@@ -1,9 +1,10 @@
 package com.example.aesculapius.data.tests.remote
 
-import com.example.aesculapius.database.UserRemoteDataRepository.Companion.usersRef
+import com.example.aesculapius.database.USERS_COLLECTION_REF
 import com.example.aesculapius.ui.tests.MetricsItem
 import com.example.aesculapius.ui.tests.RecommendationItem
 import com.example.aesculapius.ui.tests.ScoreItem
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.firestore.ktx.firestore
 import kotlinx.coroutines.tasks.await
@@ -12,7 +13,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class RemoteTestDataSource @Inject constructor() {
+class RemoteTestDataSource @Inject constructor(
+    firestore: FirebaseFirestore
+) {
+    private val usersRef = firestore.collection(USERS_COLLECTION_REF)
 
     private fun astTestsRef(userId: String) =
         usersRef.document(userId).collection("astTests")

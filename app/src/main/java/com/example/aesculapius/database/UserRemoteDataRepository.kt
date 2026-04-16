@@ -4,9 +4,7 @@ import com.example.aesculapius.data.CurrentMedicineType
 import com.example.aesculapius.data.tests.remote.RemoteTestDataSource
 import com.example.aesculapius.ui.signup.SignUpUiState
 import com.example.aesculapius.worker.User
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -20,12 +18,10 @@ const val USERS_COLLECTION_REF = "users"
 class UserRemoteDataRepository @Inject constructor(
     private val aesculapiusRepository: AesculapiusRepository,
     private val itemDAO: ItemDAO,
-    private val remoteTestDataSource: RemoteTestDataSource
+    private val remoteTestDataSource: RemoteTestDataSource,
+    firestore: FirebaseFirestore
 ) {
-    companion object {
-        val usersRef: CollectionReference = Firebase.firestore.collection(USERS_COLLECTION_REF)
-        fun getUserId() = usersRef.document().id
-    }
+    private val usersRef = firestore.collection(USERS_COLLECTION_REF)
 
     /**
      * [addUserAtFirst] добавление пользователя в Firestore Database впервые

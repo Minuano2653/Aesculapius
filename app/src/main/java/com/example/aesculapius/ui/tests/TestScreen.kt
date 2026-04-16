@@ -60,7 +60,7 @@ fun TestScreen(
     questionsList: MutableList<Question>,
     isAstTest: Boolean,
     onNavigateBack: () -> Unit,
-    onClickSummary: (Int) -> Unit,
+    onClickSummary: (List<Int>) -> Unit,
 ) {
     var isAlertDialogShown by remember { mutableStateOf(false) }
     var currentPage by remember { mutableIntStateOf(0) }
@@ -174,19 +174,7 @@ fun TestScreen(
                         }
                         else {
                             currentAnswers[currentPage] = currentAnswer
-                            if (isAstTest)
-                                onClickSummary(currentAnswers.sum() + currentAnswers.size)
-                            else {
-                                var tempSummary = 0
-                                for (i in 0..3)
-                                    tempSummary += currentAnswers[i]
-                                tempSummary += if (currentAnswers[4] == 0) 0 else 4
-                                tempSummary += currentAnswers[5]
-                                tempSummary += if (currentAnswers[6] == 0) 0 else 4
-                                tempSummary += if (currentAnswers[7] == 0) 0 else 4
-                                tempSummary += if (currentAnswers[8] == 0) 4 else 0
-                                onClickSummary(tempSummary)
-                            }
+                            onClickSummary(currentAnswers.toList())
                         }
                     } else {
                         currentAnswers[currentPage] = currentAnswer
