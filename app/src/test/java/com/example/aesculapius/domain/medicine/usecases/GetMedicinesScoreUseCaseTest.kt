@@ -19,7 +19,6 @@ class GetMedicinesScoreUseCaseTest {
     private lateinit var useCase: GetMedicinesScoreUseCase
 
     private val today: LocalDate = LocalDate.now()
-    // Дата внутри окна [now-1month, now]
     private val withinWindow: LocalDate = today.minusDays(15)
 
     @Before
@@ -101,7 +100,6 @@ class GetMedicinesScoreUseCaseTest {
 
     @Test
     fun `двойная доза принята — считается как 2 из 2`() = runTest {
-        // dosesAmount начинается с '2' → acceptedDoses += 2, amountDoses += 2
         val dose = buildDose(isAccepted = true, dosesAmount = "2 дозы")
         coEvery { repository.getMedicinesInPeriod(any(), any()) } returns
             listOf(medicineWith(listOf(dose)))
@@ -120,7 +118,6 @@ class GetMedicinesScoreUseCaseTest {
 
         val result = useCase()
 
-        // amountDoses == 0 → возвращает 0.0
         assertEquals(0.0, result, 0.001)
     }
 }

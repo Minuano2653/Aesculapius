@@ -43,7 +43,6 @@ class GetUserActivityScoreUseCaseTest {
         assertEquals(0.0, result.metricsScore, 0.001)
         assertEquals(0.0, result.medicinesScore, 0.001)
 
-        // Репозитории не должны вызываться
         coVerify(exactly = 0) { getMedicinesScoreUseCase() }
         coVerify(exactly = 0) { getAllAstResultsUseCase() }
         coVerify(exactly = 0) { getLinePointsAmountUseCase(any(), any()) }
@@ -61,7 +60,6 @@ class GetUserActivityScoreUseCaseTest {
     @Test
     fun `возвращает mainScore = 10 при регистрации 30 дней назад и всех максимальных показателях`() = runTest {
         val registerDate = LocalDate.now().minusDays(30)
-        // metricsScore = 30 * 2.0 / 60.0 = 1.0
         coEvery { getLinePointsAmountUseCase(any(), any()) } returns 30
         coEvery { getAllAstResultsUseCase() } returns listOf(
             ScoreItem(id = 1, score = 25, date = LocalDate.now().minusDays(5)) // 25/25 = 1.0
@@ -70,7 +68,6 @@ class GetUserActivityScoreUseCaseTest {
 
         val result = useCase(registerDate)
 
-        // (1.0 + 1.0 + 1.0 + 1) * 2.5 = 10.0
         assertEquals(10.0, result.mainScore, 0.001)
         assertEquals(1.0, result.astTestScore, 0.001)
         assertEquals(1.0, result.metricsScore, 0.001)
@@ -86,7 +83,6 @@ class GetUserActivityScoreUseCaseTest {
 
         val result = useCase(registerDate)
 
-        // (0 + 0 + 0 + 1) * 2.5 = 2.5
         assertEquals(2.5, result.mainScore, 0.001)
     }
 
@@ -108,7 +104,6 @@ class GetUserActivityScoreUseCaseTest {
     @Test
     fun `metricsScore не обрезается при большом количестве записей`() = runTest {
         val registerDate = LocalDate.now().minusDays(60)
-        // 60 * 2.0 / 60.0 = 2.0 — формула не ограничивает сверху
         coEvery { getLinePointsAmountUseCase(any(), any()) } returns 60
         coEvery { getAllAstResultsUseCase() } returns emptyList()
         coEvery { getMedicinesScoreUseCase() } returns 0.0
@@ -116,7 +111,6 @@ class GetUserActivityScoreUseCaseTest {
         val result = useCase(registerDate)
 
         assertEquals(2.0, result.metricsScore, 0.001)
-        // (0 + 2.0 + 0 + 1) * 2.5 = 7.5
         assertEquals(7.5, result.mainScore, 0.001)
     }
 
