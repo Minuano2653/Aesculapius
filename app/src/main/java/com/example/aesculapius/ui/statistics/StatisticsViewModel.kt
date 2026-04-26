@@ -2,16 +2,18 @@ package com.example.aesculapius.ui.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aesculapius.database.AesculapiusRepository
+import com.example.aesculapius.domain.tests.usecases.DeleteAllMetricsUseCase
+import com.example.aesculapius.domain.tests.usecases.GetAllAstResultsInRangeUseCase
+import com.example.aesculapius.domain.tests.usecases.GetAllMetricsInRangeUseCase
+import com.example.aesculapius.domain.tests.usecases.GetColumnPointsAmountUseCase
+import com.example.aesculapius.domain.tests.usecases.GetLinePointsAmountUseCase
+import com.example.aesculapius.domain.tests.usecases.InsertMetricsUseCase
 import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import com.patrykandpatrick.vico.core.entry.FloatEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -19,8 +21,15 @@ import javax.inject.Inject
 import kotlin.random.Random
 
 @HiltViewModel
-class StatisticsViewModel @Inject constructor(private val aesculapiusRepository: AesculapiusRepository) :
-    ViewModel() {
+class StatisticsViewModel @Inject constructor(
+    private val getAllAstResultsInRangeUseCase: GetAllAstResultsInRangeUseCase,
+    private val getAllMetricsInRangeUseCase: GetAllMetricsInRangeUseCase,
+    private val getLinePointsAmountUseCase: GetLinePointsAmountUseCase,
+    private val getColumnPointsAmountUseCase: GetColumnPointsAmountUseCase,
+    private val insertMetricsUseCase: InsertMetricsUseCase,
+    private val deleteAllMetricsUseCase: DeleteAllMetricsUseCase
+) : ViewModel() {
+
     private val _statisticsUiState = MutableStateFlow(GraphicTypeContent())
     val statisticsUiState: StateFlow<GraphicTypeContent> = _statisticsUiState
 
@@ -44,15 +53,17 @@ class StatisticsViewModel @Inject constructor(private val aesculapiusRepository:
 
     /** [getLinePointsAmountOnDates] прежде чем отображать линейные графики, мы получаем информацию
      * о количестве точек если точек недостаточно для отображения графиков, выводится экран "Нет данных..." */
-    suspend fun getLinePointsAmountOnDates(startDate: LocalDate, endDate: LocalDate): Int = viewModelScope.async {
-        aesculapiusRepository.getLinePointsAmountOnDates(startDate, endDate)
-    }.await()
+    suspend fun getLinePointsAmountOnDates(startDate: LocalDate, endDate: LocalDate): Int =
+        viewModelScope.async {
+            getLinePointsAmountUseCase(startDate, endDate)
+        }.await()
 
     /** [getColumnPointsAmountOnDates] прежде чем отображать столбчатые графики, мы получаем информацию
      *  о количестве точек если точек недостаточно для отображения графиков, выводится экран "Нет данных..." */
-    suspend fun getColumnPointsAmountOnDates(startDate: LocalDate, endDate: LocalDate): Int = viewModelScope.async {
-        aesculapiusRepository.getColumnPointsAmountOnDates(startDate, endDate)
-    }.await()
+    suspend fun getColumnPointsAmountOnDates(startDate: LocalDate, endDate: LocalDate): Int =
+        viewModelScope.async {
+            getColumnPointsAmountUseCase(startDate, endDate)
+        }.await()
 
     fun convertToRussian(points: Int): String {
         return when {
@@ -66,7 +77,7 @@ class StatisticsViewModel @Inject constructor(private val aesculapiusRepository:
     fun setScoresInRange() = viewModelScope.launch {
         val tempEntries: MutableList<FloatEntry> = mutableListOf()
         val tempDates: MutableList<LocalDate> = mutableListOf()
-        aesculapiusRepository.getAllAstResultsInRange().forEachIndexed { index, item ->
+        getAllAstResultsInRangeUseCase().forEachIndexed { index, item ->
             tempEntries.add(FloatEntry(index.toFloat(), item.score.toFloat()))
             tempDates.add(item.date)
         }
@@ -78,7 +89,7 @@ class StatisticsViewModel @Inject constructor(private val aesculapiusRepository:
     fun setMetricsOnDatesShort(startDate: LocalDate, endDate: LocalDate) = viewModelScope.launch {
         val tempEntries: MutableList<FloatEntry> = mutableListOf()
         _listLocalDate.value = mutableListOf()
-        aesculapiusRepository.getAllMetricsInRange(startDate, endDate).forEachIndexed { index, item ->
+        getAllMetricsInRangeUseCase(startDate, endDate).forEachIndexed { index, item ->
             tempEntries.add(FloatEntry(index.toFloat(), item.metrics))
             _listLocalDate.value.add(item.date)
         }
@@ -86,9 +97,9 @@ class StatisticsViewModel @Inject constructor(private val aesculapiusRepository:
     }
 
     fun initLineChartData() = viewModelScope.launch {
-        aesculapiusRepository.deleteAllMetrics()
+        deleteAllMetricsUseCase()
         repeat(20) { index ->
-            aesculapiusRepository.insertMetrics(Random.nextFloat()*1000, LocalDate.now().minusDays((19 - index).toLong()))
+            insertMetricsUseCase("", Random.nextFloat() * 1000, LocalDate.now().minusDays((19 - index).toLong()))
         }
     }
 
@@ -97,20 +108,19 @@ class StatisticsViewModel @Inject constructor(private val aesculapiusRepository:
         val tempEntries: MutableList<FloatEntry> = mutableListOf()
         _listLocalDate.value = mutableListOf()
         var tempCount = 0f
-        aesculapiusRepository.getAllMetricsInRange(startDate, endDate)
-            .forEachIndexed { index, item ->
-                tempCount += item.metrics
-                if (index % 7 == 6) {
-                    tempEntries.add(
-                        FloatEntry(
-                            ((index + 1) / 7 - 1).toFloat(),
-                            String.format("%.1f", tempCount / 7).replace(",", ".").toFloat()
-                        )
+        getAllMetricsInRangeUseCase(startDate, endDate).forEachIndexed { index, item ->
+            tempCount += item.metrics
+            if (index % 7 == 6) {
+                tempEntries.add(
+                    FloatEntry(
+                        ((index + 1) / 7 - 1).toFloat(),
+                        String.format("%.1f", tempCount / 7).replace(",", ".").toFloat()
                     )
-                    _listLocalDate.value.add(item.date.minusDays(6))
-                    tempCount = 0f
-                }
+                )
+                _listLocalDate.value.add(item.date.minusDays(6))
+                tempCount = 0f
             }
+        }
         _chartEntryModelLine.value.setEntries(tempEntries)
     }
 

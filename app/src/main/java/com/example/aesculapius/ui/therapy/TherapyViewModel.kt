@@ -9,7 +9,6 @@ import com.example.aesculapius.domain.medicine.usecases.AcceptDoseUseCase
 import com.example.aesculapius.domain.medicine.usecases.AddMedicineUseCase
 import com.example.aesculapius.domain.medicine.usecases.DeleteMedicineUseCase
 import com.example.aesculapius.domain.medicine.usecases.GetMedicinesForDateUseCase
-import com.example.aesculapius.domain.medicine.usecases.GetMedicinesScoreUseCase
 import com.example.aesculapius.domain.medicine.usecases.SkipDoseUseCase
 import com.example.aesculapius.domain.medicine.usecases.UpdateMedicineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +26,6 @@ import javax.inject.Inject
 @HiltViewModel
 class TherapyViewModel @Inject constructor(
     private val getMedicinesForDateUseCase: GetMedicinesForDateUseCase,
-    private val getMedicinesScoreUseCase: GetMedicinesScoreUseCase,
     private val addMedicineUseCase: AddMedicineUseCase,
     private val updateMedicineUseCase: UpdateMedicineUseCase,
     private val deleteMedicineUseCase: DeleteMedicineUseCase,
@@ -206,10 +204,6 @@ class TherapyViewModel @Inject constructor(
         }
         return true
     }
-
-    suspend fun getMedicinesScore(): Double = viewModelScope.async {
-        getMedicinesScoreUseCase()
-    }.await()
 
     /** [getAmountNotAcceptedMedicines] - служит для отображения индикторов под датами
      * (вызывается из LaunchedEffect) */

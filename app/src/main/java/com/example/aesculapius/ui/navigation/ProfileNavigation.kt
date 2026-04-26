@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -17,13 +18,13 @@ import com.example.aesculapius.R
 import com.example.aesculapius.data.Hours
 import com.example.aesculapius.ui.medicines.EditMedicineFromProfile
 import com.example.aesculapius.ui.medicines.MedicinesListScreen
-import com.example.aesculapius.ui.medicines.MedicinesListViewModel
 import com.example.aesculapius.ui.medicines.NewMedicineFromProfile
 import com.example.aesculapius.ui.profile.EditProfileScreen
 import com.example.aesculapius.ui.profile.LearnItemScreen
 import com.example.aesculapius.ui.profile.LearnScreen
 import com.example.aesculapius.ui.profile.ProfileEvent
 import com.example.aesculapius.ui.profile.ProfileScreen
+import com.example.aesculapius.ui.profile.ProfileViewModel
 import com.example.aesculapius.ui.profile.SetReminderTimeProfile
 import com.example.aesculapius.ui.signup.SetReminderTime
 import com.example.aesculapius.ui.signup.SetReminderTimeScreen
@@ -39,18 +40,16 @@ fun NavGraphBuilder.profileNavGraph(
     turnOnBars: () -> Unit,
     onProfileEvent: (ProfileEvent) -> Unit,
     navController: NavHostController,
-    getTestsScore: suspend () -> Pair<Double, Double>,
-    getMedicinesScore: suspend () -> Double,
     selectedMedicine: MedicineCard?,
     onMedicineSelected: (MedicineCard) -> Unit
 ) {
     composable(route = ProfileScreen.route) {
+        val profileViewModel: ProfileViewModel = hiltViewModel()
+        val activityState by profileViewModel.activityState.collectAsState()
         ProfileScreen(
             modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
             onNavigate = navController::navigate,
-            userRegisterDate = userUiState.userRegisterDate,
-            getMedicinesScore = getMedicinesScore,
-            getTestsScore = getTestsScore
+            activityState = activityState
         )
         turnOnBars()
     }

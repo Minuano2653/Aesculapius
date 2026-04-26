@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.aesculapius.R
 import com.example.aesculapius.data.graphicsNavigationItemContentList
 import com.example.aesculapius.ui.navigation.NavigationDestination
@@ -77,7 +78,11 @@ object StatisticsScreen : NavigationDestination {
 }
 
 @Composable
-fun StatisticsScreen(userUiState: SignUpUiState, statisticsViewModel: StatisticsViewModel, modifier: Modifier) {
+fun StatisticsScreen(
+    modifier: Modifier = Modifier,
+    userUiState: SignUpUiState,
+    statisticsViewModel: StatisticsViewModel = hiltViewModel<StatisticsViewModel>(),
+) {
     val statisticsUiState by statisticsViewModel.statisticsUiState.collectAsState()
     val datesForColumnChart by statisticsViewModel.datesForColumnChart.collectAsState()
     val modelProducerColumn by statisticsViewModel.chartEntryModelColumn.collectAsState()

@@ -3,20 +3,24 @@ package com.example.aesculapius.ui.profile
 import android.app.AlarmManager
 import android.app.Application
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.aesculapius.database.AesculapiusRepository
 import com.example.aesculapius.database.Converters
 import com.example.aesculapius.database.UserPreferencesRepository
 import com.example.aesculapius.database.UserRemoteDataRepository
+import com.example.aesculapius.domain.profile.UserActivityResult
+import com.example.aesculapius.domain.profile.usecases.GetUserActivityScoreUseCase
 import com.example.aesculapius.notifications.MetricsAlarm
 import com.example.aesculapius.ui.signup.SignUpUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -27,19 +31,28 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val prefRepository: UserPreferencesRepository,
     private val userRemoteDataRepository: UserRemoteDataRepository,
-    private val aesculapiusRepository: AesculapiusRepository,
-    private val application: Application
+    @ApplicationContext private val context: Context,
+    private val getUserActivityScoreUseCase: GetUserActivityScoreUseCase
 ) : ViewModel() {
     private val morningAlarmManager =
-        application.applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
+        context.getSystemService(ALARM_SERVICE) as AlarmManager
     private val eveningAlarmManager =
-        application.applicationContext.getSystemService(ALARM_SERVICE) as AlarmManager
+        context.getSystemService(ALARM_SERVICE) as AlarmManager
 
     val userUiState: StateFlow<SignUpUiState> = prefRepository.user
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = SignUpUiState()
+        )
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val activityState: StateFlow<UserActivityResult> = prefRepository.user
+        .transformLatest { user -> emit(getUserActivityScoreUseCase(user.userRegisterDate)) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = UserActivityResult()
         )
 
     fun onProfileEvent(event: ProfileEvent) = viewModelScope.launch {
@@ -103,12 +116,7 @@ class ProfileViewModel @Inject constructor(
                         recommendationTestDate = user.recommendationTestDate
                     )
                 )
-                user.metrics.forEach {
-                    aesculapiusRepository.insertMetrics(it.metrics, it.date)
-                }
-                user.astTests.forEach {
-                    aesculapiusRepository.insertAstTestScore(it.date, it.score)
-                }
+
             }
         }
     }
@@ -140,12 +148,12 @@ class ProfileViewModel @Inject constructor(
     private fun setMorningNotification(morningTime: LocalDateTime) {
         val morningTimeMillis =
             morningTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val morningIntent = Intent(application.applicationContext, MetricsAlarm::class.java).apply {
+        val morningIntent = Intent(context, MetricsAlarm::class.java).apply {
             putExtra("title", "Утреннее напоминание")
             putExtra("message", "Не забудьте ввести метрики с пикфлоуметра!")
         }
         val morningPendingIntent = PendingIntent.getBroadcast(
-            application.applicationContext,
+            context,
             0,
             morningIntent,
             PendingIntent.FLAG_IMMUTABLE
@@ -159,12 +167,12 @@ class ProfileViewModel @Inject constructor(
     private fun setEveningNotification(eveningTime: LocalDateTime) {
         val eveningTimeMillis =
             eveningTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val eveningIntent = Intent(application.applicationContext, MetricsAlarm::class.java).apply {
+        val eveningIntent = Intent(context, MetricsAlarm::class.java).apply {
             putExtra("title", "Вечернее напоминание")
             putExtra("message", "Не забудьте ввести метрики с пикфлоуметра!")
         }
         val eveningPendingIntent = PendingIntent.getBroadcast(
-            application.applicationContext,
+            context,
             1,
             eveningIntent,
             PendingIntent.FLAG_IMMUTABLE
@@ -181,12 +189,12 @@ class ProfileViewModel @Inject constructor(
     ) {
         val morningTimeMillis =
             morningReminder.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val morningIntent = Intent(application.applicationContext, MetricsAlarm::class.java).apply {
+        val morningIntent = Intent(context, MetricsAlarm::class.java).apply {
             putExtra("title", "Утреннее напоминание")
             putExtra("message", "Не забудьте ввести метрики с пикфлоуметра!")
         }
         val morningPendingIntent = PendingIntent.getBroadcast(
-            application.applicationContext,
+            context,
             0,
             morningIntent,
             PendingIntent.FLAG_IMMUTABLE
@@ -198,12 +206,12 @@ class ProfileViewModel @Inject constructor(
 
         val eveningTimeMillis =
             eveningReminder.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        val eveningIntent = Intent(application.applicationContext, MetricsAlarm::class.java).apply {
+        val eveningIntent = Intent(context, MetricsAlarm::class.java).apply {
             putExtra("title", "Вечернее напоминание")
             putExtra("message", "Не забудьте ввести метрики с пикфлоуметра!")
         }
         val eveningPendingIntent = PendingIntent.getBroadcast(
-            application.applicationContext,
+            context,
             1,
             eveningIntent,
             PendingIntent.FLAG_IMMUTABLE
