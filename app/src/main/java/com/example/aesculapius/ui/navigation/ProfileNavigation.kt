@@ -2,6 +2,7 @@ package com.example.aesculapius.ui.navigation
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -16,6 +17,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.aesculapius.R
 import com.example.aesculapius.data.Hours
+import com.example.aesculapius.ui.airquality.AirQualityScreen
+import com.example.aesculapius.ui.airquality.LocationPickerScreen
 import com.example.aesculapius.ui.medicines.EditMedicineFromProfile
 import com.example.aesculapius.ui.medicines.MedicinesListScreen
 import com.example.aesculapius.ui.medicines.NewMedicineFromProfile
@@ -44,12 +47,9 @@ fun NavGraphBuilder.profileNavGraph(
     onMedicineSelected: (MedicineCard) -> Unit
 ) {
     composable(route = ProfileScreen.route) {
-        val profileViewModel: ProfileViewModel = hiltViewModel()
-        val activityState by profileViewModel.activityState.collectAsState()
         ProfileScreen(
-            modifier = Modifier.padding(top = 24.dp, start = 16.dp, end = 16.dp),
-            onNavigate = navController::navigate,
-            activityState = activityState
+            modifier = Modifier.padding(top = 24.dp),
+            onNavigate = navController::navigate
         )
         turnOnBars()
     }
@@ -160,6 +160,27 @@ fun NavGraphBuilder.profileNavGraph(
     composable(route = NewMedicineFromProfile.route) {
         NewMedicineScreen(
             onNavigateBack = { navController.navigateUp() },
+        )
+        turnOffBars()
+    }
+
+    // ─── Air Quality ───────────────────────────────────────────────────────
+    composable(route = LocationPickerScreen.route) {
+        LocationPickerScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onLocationSaved = {
+                navController.navigate(AirQualityScreen.route) {
+                    popUpTo(ProfileScreen.route) { inclusive = false }
+                }
+            }
+        )
+        turnOffBars()
+    }
+
+    composable(route = AirQualityScreen.route) {
+        AirQualityScreen(
+            onNavigateBack = { navController.navigateUp() },
+            onEditLocation = { navController.navigate(LocationPickerScreen.route) }
         )
         turnOffBars()
     }

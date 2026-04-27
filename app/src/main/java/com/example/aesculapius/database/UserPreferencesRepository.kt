@@ -1,10 +1,16 @@
 package com.example.aesculapius.database
 
 import android.content.Context
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.aesculapius.domain.airquality.model.AirQualityCache
+import com.example.aesculapius.domain.airquality.model.AirQualityData
+import com.example.aesculapius.domain.airquality.model.LocationData
 import com.example.aesculapius.ui.signup.SignUpUiState
+import com.squareup.moshi.Moshi
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,8 +22,12 @@ private val Context.dataStore by preferencesDataStore("user_preferences")
 
 /** [UserPreferencesRepository] репозиторий для DataStorePreferences */
 @Singleton
-class UserPreferencesRepository @Inject constructor(@ApplicationContext appContext: Context) {
+class UserPreferencesRepository @Inject constructor(
+    @ApplicationContext appContext: Context,
+    moshi: Moshi
+) {
     private val settingDataStore = appContext.dataStore
+    private val airQualityAdapter = moshi.adapter(AirQualityData::class.java)
 
     val user: Flow<SignUpUiState> = settingDataStore.data.map { preferences ->
         SignUpUiState(
@@ -36,6 +46,16 @@ class UserPreferencesRepository @Inject constructor(@ApplicationContext appConte
         )
     }
 
+    val airQuality: Flow<AirQualityCache?> = settingDataStore.data.map { preferences ->
+        val lat = preferences[LATITUDE] ?: return@map null
+        val lon = preferences[LONGITUDE] ?: return@map null
+        val name = preferences[LOCATION_NAME].orEmpty()
+        val cachedAqi = preferences[AQI_DATA_JSON]?.let { json ->
+            runCatching { airQualityAdapter.fromJson(json) }.getOrNull()
+        }
+        AirQualityCache(LocationData(lat, lon, name), cachedAqi)
+    }
+
     private companion object {
         val IS_USER_REGISTERED = stringPreferencesKey("is_user_registered")
         val MORNING_REMINDER_TIME = stringPreferencesKey("morning_reminder_time")
@@ -51,6 +71,12 @@ class UserPreferencesRepository @Inject constructor(@ApplicationContext appConte
         val BIRTHDAY = stringPreferencesKey("birthday")
         val HEIGHT = stringPreferencesKey("height")
         val WEIGHT = stringPreferencesKey("weight")
+
+        val LATITUDE = doublePreferencesKey("aqi_location_lat")
+        val LONGITUDE = doublePreferencesKey("aqi_location_lon")
+        val LOCATION_NAME = stringPreferencesKey("aqi_location_name")
+        val AQI_DATA_JSON = stringPreferencesKey("aqi_data_json")
+        val AQI_FETCHED_AT = longPreferencesKey("aqi_fetched_at")
     }
 
     /**
@@ -119,6 +145,22 @@ class UserPreferencesRepository @Inject constructor(@ApplicationContext appConte
     suspend fun saveUserEveningReminder(eveningReminder: String) {
         settingDataStore.edit { preferences ->
             preferences[EVENING_REMINDER_TIME] = eveningReminder
+        }
+    }
+
+    suspend fun saveSelectedLocation(lat: Double, lon: Double, name: String) {
+        settingDataStore.edit { preferences ->
+            preferences[LATITUDE] = lat
+            preferences[LONGITUDE] = lon
+            preferences[LOCATION_NAME] = name
+        }
+    }
+
+    suspend fun saveAirQuality(data: AirQualityData) {
+        val json = airQualityAdapter.toJson(data)
+        settingDataStore.edit { preferences ->
+            preferences[AQI_DATA_JSON] = json
+            preferences[AQI_FETCHED_AT] = data.fetchedAt
         }
     }
 }

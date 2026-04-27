@@ -248,4 +248,45 @@
     <string name="my_medicines">Мои препараты</string>
     <string name="add_medicine">Добавить препарат</string>
     <string name="medicines_list_empty">Препараты не добавлены</string>
+
+    <!-- Air quality -->
+    <string name="air_quality_index">Индекс качества воздуха</string>
+    <string name="select_location_title">Выбор геопозиции</string>
+    <string name="choose_place">Выбрать место</string>
+    <string name="aqi_label_short">AQI</string>
+    <string name="aqi_unknown_location">Точка не определена</string>
+    <string name="aqi_loading_location">Определяем место…</string>
+    <string name="aqi_no_data">Нет данных о качестве воздуха</string>
+    <string name="aqi_retry">Повторить</string>
+    <string name="aqi_components_title">Загрязняющие вещества (мкг/м³)</string>
+    <string name="aqi_co">CO</string>
+    <string name="aqi_no2">NO₂</string>
+    <string name="aqi_o3">O₃</string>
+    <string name="aqi_so2">SO₂</string>
+    <string name="aqi_pm25">PM2.5</string>
+    <string name="aqi_pm10">PM10</string>
+
+    <string name="aqi_good">Хороший</string>
+    <string name="aqi_fair">Удовлетворительный</string>
+    <string name="aqi_moderate">Умеренный</string>
+    <string name="aqi_poor">Плохой</string>
+    <string name="aqi_very_poor">Очень плохой</string>
+
+    <string name="aqi_good_desc">Хорошее качество воздуха. Идеальный день для прогулки!</string>
+    <string name="aqi_fair_desc">Качество воздуха в норме. Можно спокойно проводить время на улице.</string>
+    <string name="aqi_moderate_desc">Воздух умеренно загрязнён. Чувствительным к астме лучше сократить долгие прогулки.</string>
+    <string name="aqi_poor_desc">Качество воздуха плохое. Снизь физическую активность на улице и держи ингалятор под рукой.</string>
+    <string name="aqi_very_poor_desc">Воздух очень загрязнён. Лучше остаться дома и закрыть окна.</string>
+
+    <string name="aqi_co_desc">Бесцветный газ без запаха, образуется при неполном сгорании топлива (автомобили, отопление). Даже в небольших количествах снижает поступление кислорода в организм. При астме может усиливать слабость и одышку.</string>
+    <string name="aqi_no2_desc">Газ, который выделяется в основном транспортом и промышленностью. Раздражает дыхательные пути и снижает защиту лёгких. При астме может провоцировать кашель и обострения.</string>
+    <string name="aqi_o3_desc">Образуется под действием солнечного света из загрязняющих веществ. Сильный окислитель, раздражает слизистые. При астме часто вызывает ощущение жжения в груди и затруднение дыхания.</string>
+    <string name="aqi_so2_desc">Выделяется при сжигании угля и нефти. Раздражает дыхательные пути даже при кратковременном воздействии. При астме может быстро вызывать спазм бронхов.</string>
+    <string name="aqi_pm25_desc">Очень мелкие частицы пыли (в 30 раз меньше толщины волоса). Проникают глубоко в лёгкие и даже в кровь. При астме считаются одними из самых опасных — вызывают воспаление и приступы.</string>
+    <string name="aqi_pm10_desc">Более крупные частицы пыли (пыльца, пыль, грязь). Оседают в верхних дыхательных путях. При астме могут вызывать раздражение и кашель.</string>
+
+    <string name="aqi_error_load">Не удалось обновить данные о качестве воздуха</string>
+    <string name="location_permission_required">Разреши доступ к геолокации в настройках</string>
+    <string name="enable_location_services">Включи геолокацию, чтобы определить позицию</string>
+    <string name="location_unavailable">Не удалось определить местоположение</string>
 </resources>

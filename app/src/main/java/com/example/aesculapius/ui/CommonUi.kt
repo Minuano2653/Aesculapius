@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 import com.example.aesculapius.ui.home.TopBar
 
@@ -27,12 +28,14 @@ fun TopBar(
     text: String,
     modifier: Modifier = Modifier,
     existHelpButton: Boolean = false,
-    onClickHelpButton: () -> Unit = {}
+    onClickHelpButton: () -> Unit = {},
+    rightIcon: Painter? = null,
+    onClickRightIcon: () -> Unit = {}
 ) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp),
+            .fillMaxWidth(),
+            //.padding(top = 20.dp),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -60,6 +63,18 @@ fun TopBar(
                 Icon(
                     imageVector = Icons.Outlined.Info,
                     contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiary
+                )
+            }
+        if (rightIcon != null)
+            IconButton(
+                onClick = { onClickRightIcon() },
+                modifier = Modifier.padding(end = 12.dp)
+            ) {
+                Icon(
+                    painter = rightIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.onTertiary
                 )
             }

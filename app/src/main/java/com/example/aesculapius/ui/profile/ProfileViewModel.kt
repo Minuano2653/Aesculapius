@@ -11,6 +11,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.aesculapius.database.Converters
 import com.example.aesculapius.database.UserPreferencesRepository
 import com.example.aesculapius.database.UserRemoteDataRepository
+import com.example.aesculapius.domain.airquality.model.AirQualityCache
+import com.example.aesculapius.domain.airquality.usecases.GetSavedAirQualityCacheFlowUseCase
+import com.example.aesculapius.domain.airquality.usecases.RefreshAirQualityForSavedLocationUseCase
 import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.domain.profile.usecases.GetUserActivityScoreUseCase
 import com.example.aesculapius.notifications.MetricsAlarm
@@ -32,7 +35,9 @@ class ProfileViewModel @Inject constructor(
     private val prefRepository: UserPreferencesRepository,
     private val userRemoteDataRepository: UserRemoteDataRepository,
     @ApplicationContext private val context: Context,
-    private val getUserActivityScoreUseCase: GetUserActivityScoreUseCase
+    private val getUserActivityScoreUseCase: GetUserActivityScoreUseCase,
+    getSavedAirQualityCacheFlowUseCase: GetSavedAirQualityCacheFlowUseCase,
+    private val refreshAirQualityForSavedLocationUseCase: RefreshAirQualityForSavedLocationUseCase
 ) : ViewModel() {
     private val morningAlarmManager =
         context.getSystemService(ALARM_SERVICE) as AlarmManager
@@ -53,6 +58,13 @@ class ProfileViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = UserActivityResult()
+        )
+
+    val airQualityState: StateFlow<AirQualityCache?> = getSavedAirQualityCacheFlowUseCase()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
         )
 
     fun onProfileEvent(event: ProfileEvent) = viewModelScope.launch {
@@ -93,6 +105,10 @@ class ProfileViewModel @Inject constructor(
                     event.signUpUiState.morningReminder,
                     event.signUpUiState.eveningReminder
                 )
+            }
+
+            ProfileEvent.OnRefreshAirQuality -> {
+                runCatching { refreshAirQualityForSavedLocationUseCase() }
             }
 
             is ProfileEvent.OnLoginUser -> {
