@@ -2,6 +2,7 @@ package com.example.aesculapius.ui.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,21 +11,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.aesculapius.R
 import com.example.aesculapius.data.learnList
+import com.example.aesculapius.domain.airquality.model.AirQualityCache
 import com.example.aesculapius.domain.profile.UserActivityResult
+import com.example.aesculapius.ui.airquality.AirQualityScreen
+import com.example.aesculapius.ui.airquality.LocationPickerScreen
+import com.example.aesculapius.ui.airquality.components.ProfileAqiWidget
 import com.example.aesculapius.ui.medicines.MedicinesListScreen
 import com.example.aesculapius.ui.navigation.NavigationDestination
 import com.example.aesculapius.ui.theme.AesculapiusTheme
@@ -37,91 +51,113 @@ object ProfileScreen : NavigationDestination {
 
 @Composable
 fun ProfileScreen(
-    activityState: UserActivityResult,
+    modifier: Modifier = Modifier,
+    viewModel: ProfileViewModel = hiltViewModel<ProfileViewModel>(),
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        if (activityState.mainScore > 0)
+    val activityState by viewModel.activityState.collectAsStateWithLifecycle()
+    val airQualityState by viewModel.airQualityState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.onProfileEvent(ProfileEvent.OnRefreshAirQuality)
+    }
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
+        if (activityState.mainScore > 0) {
+            item {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = 0.dp
+                ) {
+                    YourActivity(
+                        metricsScore = activityState.metricsScore,
+                        astTestScore = activityState.astTestScore,
+                        medicinesScore = activityState.medicinesScore,
+                        score = activityState.mainScore,
+                        navigate = onNavigate
+                    )
+                }
+            }
+        }
+
+        item {
+            ProfileAqiWidget(
+                state = airQualityState,
+                onNavigateToPicker = { onNavigate(LocationPickerScreen.route) },
+                onNavigateToAirQuality = { onNavigate(AirQualityScreen.route) },
+            )
+        }
+
+        item {
             Card(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 24.dp),
+                    .clickable { onNavigate(EditProfileScreen.route) },
                 elevation = 0.dp
             ) {
-                YourActivity(
-                    metricsScore = activityState.metricsScore,
-                    astTestScore = activityState.astTestScore,
-                    medicinesScore = activityState.medicinesScore,
-                    score = activityState.mainScore,
-                    navigate = onNavigate
+                SingleItem(
+                    image = R.drawable.profile_icon,
+                    name = stringResource(id = R.string.profile),
+                    onClick = { onNavigate(EditProfileScreen.route) }
                 )
             }
+        }
 
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .clickable { onNavigate(EditProfileScreen.route) }
-                .fillMaxWidth(),
-            elevation = 0.dp
-        ) {
-            SingleItem(
-                image = R.drawable.profile_icon,
-                name = stringResource(id = R.string.profile),
-                onClick = { onNavigate(EditProfileScreen.route) }
-            )
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigate(LearnScreen.route) },
+                elevation = 0.dp
+            ) {
+                SingleItem(
+                    image = R.drawable.book_icon,
+                    name = stringResource(id = R.string.learn_block_name),
+                    onClick = { onNavigate(LearnScreen.route) }
+                )
+            }
         }
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNavigate(LearnScreen.route) }
-                .padding(vertical = 24.dp),
-            elevation = 0.dp
-        ) {
-            SingleItem(
-                image = R.drawable.book_icon,
-                name = stringResource(id = R.string.learn_block_name),
-                onClick = { onNavigate(LearnScreen.route) }
-            )
+
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigate(SetReminderTimeProfile.route) },
+                elevation = 0.dp
+            ) {
+                SingleItem(
+                    image = R.drawable.timer_icon,
+                    name = stringResource(id = R.string.set_reminders),
+                    onClick = { onNavigate(SetReminderTimeProfile.route) }
+                )
+            }
         }
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNavigate(SetReminderTimeProfile.route) },
-            elevation = 0.dp
-        ) {
-            SingleItem(
-                image = R.drawable.timer_icon,
-                name = stringResource(id = R.string.set_reminders),
-                onClick = { onNavigate(SetReminderTimeProfile.route) }
-            )
+
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigate(MedicinesListScreen.route) },
+                elevation = 0.dp
+            ) {
+                SingleItem(
+                    image = R.drawable.therapy_icon,
+                    name = stringResource(id = R.string.my_medicines),
+                    onClick = { onNavigate(MedicinesListScreen.route) }
+                )
+            }
         }
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onNavigate(MedicinesListScreen.route) }
-                .padding(top = 24.dp),
-            elevation = 0.dp
-        ) {
-            SingleItem(
-                image = R.drawable.therapy_icon,
-                name = stringResource(id = R.string.my_medicines),
-                onClick = { onNavigate(MedicinesListScreen.route) }
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = stringResource(R.string.version),
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 20.dp),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            style = MaterialTheme.typography.headlineMedium
-        )
     }
 }
 
@@ -279,12 +315,6 @@ fun SingleItem(image: Int, name: String, onClick: () -> Unit = {}) {
 fun ProfileScreenPreview() {
     AesculapiusTheme {
         ProfileScreen(
-            activityState = UserActivityResult(
-                mainScore = 7.5,
-                astTestScore = 0.8,
-                metricsScore = 0.7,
-                medicinesScore = 0.5
-            ),
             onNavigate = {}
         )
     }

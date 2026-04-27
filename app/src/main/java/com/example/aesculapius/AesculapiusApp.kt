@@ -15,6 +15,7 @@ import androidx.work.WorkerFactory
 import com.example.aesculapius.worker.UserWorker
 import com.example.aesculapius.worker.UserWorkerSchedule
 import com.google.firebase.FirebaseApp
+import com.yandex.mapkit.MapKitFactory
 import dagger.hilt.android.HiltAndroidApp
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -28,5 +29,11 @@ class AesculapiusApp() : Application(), Configuration.Provider {
         return Configuration.Builder()
             .setWorkerFactory(hiltWorkerFactory)
             .build()
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+
+        MapKitFactory.setApiKey(BuildConfig.MAPKIT_API_KEY)
     }
 }
