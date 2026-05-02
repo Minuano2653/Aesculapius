@@ -15,32 +15,27 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Text
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.aesculapius.R
 import com.example.aesculapius.data.learnList
-import com.example.aesculapius.domain.airquality.model.AirQualityCache
-import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.ui.airquality.AirQualityScreen
 import com.example.aesculapius.ui.airquality.LocationPickerScreen
 import com.example.aesculapius.ui.airquality.components.ProfileAqiWidget
 import com.example.aesculapius.ui.medicines.MedicinesListScreen
 import com.example.aesculapius.ui.navigation.NavigationDestination
+import com.example.aesculapius.ui.symptoms.SymptomsScreen
 import com.example.aesculapius.ui.theme.AesculapiusTheme
 import com.google.common.primitives.Doubles.min
 import kotlin.math.abs
@@ -155,6 +150,22 @@ fun ProfileScreen(
                     image = R.drawable.therapy_icon,
                     name = stringResource(id = R.string.my_medicines),
                     onClick = { onNavigate(MedicinesListScreen.route) }
+                )
+            }
+        }
+
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigate(SymptomsScreen.route) },
+                elevation = 0.dp
+            ) {
+                SingleItem(
+                    image = R.drawable.symptoms_icon,
+                    name = stringResource(id = R.string.my_symptoms),
+                    onClick = { onNavigate(SymptomsScreen.route) }
                 )
             }
         }

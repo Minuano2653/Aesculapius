@@ -145,7 +145,10 @@ private fun EmptyState(onEditLocation: () -> Unit) {
                     contentColor = Color.White
                 )
             ) {
-                Text(text = stringResource(R.string.choose_place))
+                Text(
+                    text = stringResource(R.string.choose_place),
+                    color = MaterialTheme.colorScheme.primaryContainer
+                )
             }
         }
     }

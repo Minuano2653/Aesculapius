@@ -2,6 +2,7 @@ package com.example.aesculapius.database
 
 import androidx.room.Dao
 import androidx.room.Query
+import com.example.aesculapius.ui.symptoms.SymptomItem
 import com.example.aesculapius.ui.tests.MetricsItem
 import com.example.aesculapius.ui.tests.RecommendationItem
 import com.example.aesculapius.ui.tests.ScoreItem
@@ -109,4 +110,13 @@ interface ItemDAO {
 
     @Query("SELECT * FROM recommendation_items")
     suspend fun getAllRecommendationResults(): List<RecommendationItem>
+
+    @Query("INSERT OR IGNORE INTO symptoms VALUES(:id, :name, :createdAt)")
+    suspend fun insertSymptom(id: String, name: String, createdAt: String)
+
+    @Query("DELETE FROM symptoms WHERE id = :id")
+    suspend fun deleteSymptom(id: String)
+
+    @Query("SELECT * FROM symptoms ORDER BY createdAt DESC")
+    suspend fun getAllSymptoms(): List<SymptomItem>
 }

@@ -1,6 +1,7 @@
 package com.example.aesculapius.database
 
 import com.example.aesculapius.data.CurrentMedicineType
+import com.example.aesculapius.data.symptoms.remote.RemoteSymptomDataSource
 import com.example.aesculapius.data.tests.remote.RemoteTestDataSource
 import com.example.aesculapius.ui.signup.SignUpUiState
 import com.example.aesculapius.worker.User
@@ -19,6 +20,7 @@ class UserRemoteDataRepository @Inject constructor(
     private val aesculapiusRepository: AesculapiusRepository,
     private val itemDAO: ItemDAO,
     private val remoteTestDataSource: RemoteTestDataSource,
+    private val remoteSymptomDataSource: RemoteSymptomDataSource,
     firestore: FirebaseFirestore
 ) {
     private val usersRef = firestore.collection(USERS_COLLECTION_REF)
@@ -112,6 +114,11 @@ class UserRemoteDataRepository @Inject constructor(
                     else if (isSkipped) itemDAO.skipMedicine(dose.idDose)
                 }
             }
+        }
+
+        // 6. Восстанавливаем симптомы из subcollection symptoms
+        remoteSymptomDataSource.getAllSymptoms(userId).forEach { symptom ->
+            itemDAO.insertSymptom(symptom.id, symptom.name, symptom.createdAt)
         }
 
         return user

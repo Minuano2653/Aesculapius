@@ -249,6 +249,16 @@
     <string name="add_medicine">Добавить препарат</string>
     <string name="medicines_list_empty">Препараты не добавлены</string>
 
+    <!-- Symptoms -->
+    <string name="my_symptoms">Мои симптомы</string>
+    <string name="symptoms_list_empty">Симптомы не добавлены</string>
+    <string name="new_symptom">Новый симптом</string>
+    <string name="symptom_name_hint">Название</string>
+    <string name="delete_symptom_title">Удалить симптом</string>
+    <string name="delete_symptom_message">Вы уверены, что хотите удалить этот симптом?</string>
+    <string name="confirm">Подтвердить</string>
+    <string name="cancel">Отмена</string>
+
     <!-- Air quality -->
     <string name="air_quality_index">Индекс качества воздуха</string>
     <string name="select_location_title">Выбор геопозиции</string>

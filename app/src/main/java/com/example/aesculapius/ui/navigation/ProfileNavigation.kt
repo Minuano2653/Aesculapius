@@ -23,6 +23,7 @@ import com.example.aesculapius.ui.medicines.EditMedicineFromProfile
 import com.example.aesculapius.ui.medicines.MedicinesListScreen
 import com.example.aesculapius.ui.medicines.NewMedicineFromProfile
 import com.example.aesculapius.ui.profile.EditProfileScreen
+import com.example.aesculapius.ui.symptoms.SymptomsScreen
 import com.example.aesculapius.ui.profile.LearnItemScreen
 import com.example.aesculapius.ui.profile.LearnScreen
 import com.example.aesculapius.ui.profile.ProfileEvent
@@ -133,6 +134,12 @@ fun NavGraphBuilder.profileNavGraph(
             name = stringResource(id = arg[0]),
             text = stringResource(id = arg[1])
         )
+        turnOffBars()
+    }
+
+    // ─── Симптомы ─────────────────────────────────────────────────────────────
+    composable(route = SymptomsScreen.route) {
+        SymptomsScreen(onNavigateBack = { navController.navigateUp() })
         turnOffBars()
     }
 
