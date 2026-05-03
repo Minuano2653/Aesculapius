@@ -4,6 +4,7 @@ import com.example.aesculapius.data.symptoms.remote.RemoteSymptomDataSource
 import com.example.aesculapius.database.ItemDAO
 import com.example.aesculapius.domain.symptoms.SymptomRepository
 import com.example.aesculapius.ui.symptoms.SymptomItem
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -32,4 +33,6 @@ class SymptomRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getSymptoms(): List<SymptomItem> = itemDAO.getAllSymptoms()
+
+    override fun getSymptomsFlow(): Flow<List<SymptomItem>> = itemDAO.getAllSymptomsFlow()
 }

@@ -49,6 +49,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.aesculapius.R
 import com.example.aesculapius.data.navigationItemContentList
 import com.example.aesculapius.data.topBarHomeScreen
+import com.example.aesculapius.ui.navigation.diaryNavGraph
 import com.example.aesculapius.ui.navigation.profileNavGraph
 import com.example.aesculapius.ui.navigation.statisticsNavGraph
 import com.example.aesculapius.ui.navigation.testsNavGraph
@@ -171,6 +172,12 @@ fun HomeScreen(
                         navController = navController,
                         testsViewModel = testsViewModel,
                         onProfileEvent = onProfileEvent
+                    )
+
+                    diaryNavGraph(
+                        navController = navController,
+                        turnOnBars = { isBarsDisplayed = true },
+                        turnOffBars = { isBarsDisplayed = false }
                     )
                 }
             )

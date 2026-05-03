@@ -1,6 +1,7 @@
 package com.example.aesculapius.database
 
 import com.example.aesculapius.data.CurrentMedicineType
+import com.example.aesculapius.data.diary.remote.RemoteDiaryDataSource
 import com.example.aesculapius.data.symptoms.remote.RemoteSymptomDataSource
 import com.example.aesculapius.data.tests.remote.RemoteTestDataSource
 import com.example.aesculapius.ui.signup.SignUpUiState
@@ -21,6 +22,7 @@ class UserRemoteDataRepository @Inject constructor(
     private val itemDAO: ItemDAO,
     private val remoteTestDataSource: RemoteTestDataSource,
     private val remoteSymptomDataSource: RemoteSymptomDataSource,
+    private val remoteDiaryDataSource: RemoteDiaryDataSource,
     firestore: FirebaseFirestore
 ) {
     private val usersRef = firestore.collection(USERS_COLLECTION_REF)
@@ -119,6 +121,11 @@ class UserRemoteDataRepository @Inject constructor(
         // 6. Восстанавливаем симптомы из subcollection symptoms
         remoteSymptomDataSource.getAllSymptoms(userId).forEach { symptom ->
             itemDAO.insertSymptom(symptom.id, symptom.name, symptom.createdAt)
+        }
+
+        // 7. Восстанавливаем записи дневника из subcollection diary
+        remoteDiaryDataSource.getAllEntries(userId).forEach { entry ->
+            itemDAO.insertOrReplaceDiaryEntry(entry)
         }
 
         return user

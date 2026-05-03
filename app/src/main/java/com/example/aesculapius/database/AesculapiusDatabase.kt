@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.aesculapius.ui.diary.DiaryEntryItem
 import com.example.aesculapius.ui.symptoms.SymptomItem
 import com.example.aesculapius.ui.tests.MetricsItem
 import com.example.aesculapius.ui.tests.RecommendationItem
@@ -12,7 +13,7 @@ import com.example.aesculapius.ui.tests.ScoreItem
 import com.example.aesculapius.ui.therapy.DoseItem
 import com.example.aesculapius.ui.therapy.MedicineItem
 
-@Database(entities = [MedicineItem::class, ScoreItem::class, MetricsItem::class, DoseItem::class, RecommendationItem::class, SymptomItem::class], version = 10, exportSchema = false)
+@Database(entities = [MedicineItem::class, ScoreItem::class, MetricsItem::class, DoseItem::class, RecommendationItem::class, SymptomItem::class, DiaryEntryItem::class], version = 11, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AesculapiusDatabase: RoomDatabase() {
     abstract fun itemDao(): ItemDAO
