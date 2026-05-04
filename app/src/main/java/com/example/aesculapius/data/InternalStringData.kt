@@ -1,6 +1,7 @@
 package com.example.aesculapius.data
 
 import com.example.aesculapius.R
+import com.example.aesculapius.ui.diary.DiaryScreen
 import com.example.aesculapius.ui.home.NavigationItemContent
 import com.example.aesculapius.ui.profile.LearnItem
 import com.example.aesculapius.ui.profile.ProfileScreen
@@ -43,6 +44,10 @@ val navigationItemContentList = listOf(
         icon = R.drawable.tests_icon
     ),
     NavigationItemContent(
+        pageType = DiaryScreen.route,
+        icon = R.drawable.diary_icon
+    ),
+    NavigationItemContent(
         pageType = ProfileScreen.route,
         icon = R.drawable.profile_icon
     )
@@ -52,6 +57,7 @@ val topBarHomeScreen = mapOf(
     StatisticsScreen.route to Pair(R.string.statistics_name, true),
     TherapyScreen.route to Pair(R.string.therapy_name, false),
     TestsScreen.route to Pair(R.string.tests_name, true),
+    DiaryScreen.route to Pair(R.string.diary_screen_title, false),
     ProfileScreen.route to Pair(R.string.profile_name, false)
 )
 

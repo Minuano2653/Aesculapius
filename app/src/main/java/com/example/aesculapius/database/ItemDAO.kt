@@ -1,7 +1,11 @@
 package com.example.aesculapius.database
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.aesculapius.ui.diary.DiaryEntryItem
+import com.example.aesculapius.ui.symptoms.SymptomItem
 import com.example.aesculapius.ui.tests.MetricsItem
 import com.example.aesculapius.ui.tests.RecommendationItem
 import com.example.aesculapius.ui.tests.ScoreItem
@@ -9,6 +13,7 @@ import com.example.aesculapius.ui.therapy.DoseItem
 import com.example.aesculapius.ui.therapy.MedicineItem
 import com.example.aesculapius.ui.therapy.MedicineWithDoses
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import java.time.LocalDate
 
 // data access object
@@ -109,4 +114,28 @@ interface ItemDAO {
 
     @Query("SELECT * FROM recommendation_items")
     suspend fun getAllRecommendationResults(): List<RecommendationItem>
+
+    @Query("INSERT OR IGNORE INTO symptoms VALUES(:id, :name, :createdAt)")
+    suspend fun insertSymptom(id: String, name: String, createdAt: String)
+
+    @Query("DELETE FROM symptoms WHERE id = :id")
+    suspend fun deleteSymptom(id: String)
+
+    @Query("SELECT * FROM symptoms ORDER BY createdAt DESC")
+    suspend fun getAllSymptoms(): List<SymptomItem>
+
+    @Query("SELECT * FROM symptoms ORDER BY createdAt DESC")
+    fun getAllSymptomsFlow(): Flow<List<SymptomItem>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrReplaceDiaryEntry(entry: DiaryEntryItem)
+
+    @Query("DELETE FROM diary_entries WHERE date = :date")
+    suspend fun deleteDiaryEntry(date: LocalDate)
+
+    @Query("SELECT * FROM diary_entries ORDER BY date DESC")
+    fun getAllDiaryEntriesFlow(): Flow<List<DiaryEntryItem>>
+
+    @Query("SELECT * FROM diary_entries WHERE date = :date LIMIT 1")
+    suspend fun getDiaryEntryByDate(date: LocalDate): DiaryEntryItem?
 }
