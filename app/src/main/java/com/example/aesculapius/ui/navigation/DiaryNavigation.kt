@@ -10,9 +10,7 @@ import com.example.aesculapius.ui.diary.entry.DiaryEntryScreen
 import com.example.aesculapius.ui.symptoms.SymptomsScreen
 
 fun NavGraphBuilder.diaryNavGraph(
-    navController: NavHostController,
-    turnOnBars: () -> Unit,
-    turnOffBars: () -> Unit
+    navController: NavHostController
 ) {
     composable(route = DiaryScreen.route) {
         DiaryScreen(
@@ -20,7 +18,6 @@ fun NavGraphBuilder.diaryNavGraph(
                 navController.navigate("${DiaryEntryScreen.route}/$dateArg")
             }
         )
-        turnOnBars()
     }
 
     composable(
@@ -31,6 +28,5 @@ fun NavGraphBuilder.diaryNavGraph(
             onNavigateBack = { navController.navigateUp() },
             onNavigateToSymptoms = { navController.navigate(SymptomsScreen.route) }
         )
-        turnOffBars()
     }
 }

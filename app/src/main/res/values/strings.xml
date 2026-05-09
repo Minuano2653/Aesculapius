@@ -1,5 +1,11 @@
 <resources>
     <string name="app_name">Aesculapius</string>
+    <string name="report_generation">Генерация отчёта</string>
+    <string name="report_error_unauthorized">Не удалось подтвердить вход. Войдите снова и повторите попытку.</string>
+    <string name="report_error_user_not_found">Профиль пользователя не найден на сервере.</string>
+    <string name="report_error_invalid_params">Некорректные параметры запроса отчёта.</string>
+    <string name="report_error_network">Нет соединения с сервером. Проверьте интернет.</string>
+    <string name="report_error_unknown">Не удалось сгенерировать отчёт. Попробуйте ещё раз.</string>
     <string name="compose">Compose</string>
     <string name="views">Views</string>
     <string name="data_set_x">Data set %d</string>

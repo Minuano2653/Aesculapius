@@ -41,6 +41,11 @@ android {
             "OPENWEATHER_API_KEY",
             "\"$openWeatherApiKey\""
         )
+        buildConfigField(
+            "String",
+            "PDF_BASE_URL",
+            "\"https://pdfserver-abzi.onrender.com/\""
+        )
     }
 
     buildTypes {

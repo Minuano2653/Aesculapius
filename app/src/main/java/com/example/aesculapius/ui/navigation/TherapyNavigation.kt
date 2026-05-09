@@ -16,7 +16,6 @@ import com.example.aesculapius.ui.therapy.TherapyViewModel
 import java.time.LocalDate
 
 fun NavGraphBuilder.therapyNavGraph(
-    turnOnBars: () -> Unit,
     onClickMedicine: (MedicineCard) -> Unit,
     therapyViewModel: TherapyViewModel,
     navController: NavHostController
@@ -41,6 +40,5 @@ fun NavGraphBuilder.therapyNavGraph(
             currentDate = therapyViewModel.getCurrentDate(),
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        turnOnBars()
     }
 }

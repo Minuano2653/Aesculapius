@@ -4,26 +4,33 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.IconButton
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.TextButton
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -36,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,6 +55,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.aesculapius.R
 import com.example.aesculapius.data.navigationItemContentList
 import com.example.aesculapius.data.topBarHomeScreen
+import com.example.aesculapius.ui.diary.DiaryScreen
+import com.example.aesculapius.ui.diary.entry.DiaryEntryScreen
 import com.example.aesculapius.ui.navigation.diaryNavGraph
 import com.example.aesculapius.ui.navigation.profileNavGraph
 import com.example.aesculapius.ui.navigation.statisticsNavGraph
@@ -78,8 +86,6 @@ fun HomeScreen(
     val testsViewModel: TestsViewModel = hiltViewModel()
 
     val selectedMedicineFromProfile: MutableState<MedicineCard?> = remember { mutableStateOf(null) }
-
-    var isBarsDisplayed by remember { mutableStateOf(true) }
     val currentMedicineItem: MutableState<MedicineCard?> = remember { mutableStateOf(null) }
 
     // используется при нажатии на препарат
@@ -89,6 +95,9 @@ fun HomeScreen(
     val navController = rememberAnimatedNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute: String = navBackStackEntry?.destination?.route ?: TherapyScreen.route
+
+    val topLevelRoutes = remember { navigationItemContentList.map { it.pageType }.toSet() }
+    val isBarsDisplayed = currentRoute in topLevelRoutes
 
     ModalBottomSheetLayout(
         sheetContent = {
@@ -144,12 +153,9 @@ fun HomeScreen(
                         },
                         navController = navController,
                         therapyViewModel = therapyViewModel,
-                        turnOnBars = { isBarsDisplayed = true },
                     )
 
                     profileNavGraph(
-                        turnOffBars = { isBarsDisplayed = false },
-                        turnOnBars = { isBarsDisplayed = true },
                         userUiState = userUiState,
                         navController = navController,
                         onProfileEvent = onProfileEvent,
@@ -160,24 +166,19 @@ fun HomeScreen(
                     statisticsNavGraph(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight()
-                            .background(color = tertiaryContainer),
+                            .wrapContentHeight(),
                         userUiState = userUiState
                     )
 
                     testsNavGraph(
                         userUiState = userUiState,
-                        turnOffBars = { isBarsDisplayed = false },
-                        turnOnBars = { isBarsDisplayed = true },
                         navController = navController,
                         testsViewModel = testsViewModel,
                         onProfileEvent = onProfileEvent
                     )
 
                     diaryNavGraph(
-                        navController = navController,
-                        turnOnBars = { isBarsDisplayed = true },
-                        turnOffBars = { isBarsDisplayed = false }
+                        navController = navController
                     )
                 }
             )
@@ -187,11 +188,11 @@ fun HomeScreen(
 
 /** [TopBar] для главного экрана без навигации */
 @Composable
-fun TopBar(modifier: Modifier = Modifier, screenName: String, onClickHelpButton: () -> Unit = {}) {
+fun TopBar(modifier: Modifier = Modifier, screenName: String) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 26.dp),
+            .height(64.dp),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically
     ) {

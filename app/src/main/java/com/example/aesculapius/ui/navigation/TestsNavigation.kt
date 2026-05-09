@@ -33,8 +33,6 @@ import java.time.LocalDateTime
 
 fun NavGraphBuilder.testsNavGraph(
     onProfileEvent: (ProfileEvent) -> Unit,
-    turnOffBars: () -> Unit,
-    turnOnBars: () -> Unit,
     testsViewModel: TestsViewModel,
     userUiState: SignUpUiState,
     navController: NavHostController
@@ -49,7 +47,6 @@ fun NavGraphBuilder.testsNavGraph(
             onProfileEvent = onProfileEvent,
             onNavigate = navController::navigate
         )
-        turnOnBars()
     }
     // не делаем несколько отдельных composables, так как экран для двух первых тестов один
     composable(
@@ -97,28 +94,24 @@ fun NavGraphBuilder.testsNavGraph(
                 userUiState = userUiState
             )
         }
-        turnOffBars()
     }
     composable(route = MetricsOnboardingScreen.route) {
         MetricsOnboardingScreen(
             onNavigateBack = { navController.navigateUp() },
             onClickBeginButton = { navController.navigate("${TestScreen.route}/${TestType.Metrics}") }
         )
-        turnOffBars()
     }
     composable(route = AstTestOnboardingScreen.route) {
         AstTestOnboardingScreen(
             onNavigateBack = { navController.navigateUp() },
             onClickBeginButton = { navController.navigate("${TestScreen.route}/${TestType.AST}") }
         )
-        turnOffBars()
     }
     composable(route = RecommendationsOnboardingScreen.route) {
         RecommendationsOnboardingScreen(
             onNavigateBack = { navController.navigateUp() },
             onClickBeginButton = { navController.navigate("${TestScreen.route}/${TestType.Recommendations}") }
         )
-        turnOffBars()
     }
     composable(route = AstTestResult.route) {
         val summaryScore by testsViewModel.summaryScore.collectAsState()
@@ -127,7 +120,6 @@ fun NavGraphBuilder.testsNavGraph(
             onNavigateBack = { navController.navigateUp() },
             summaryScore = summaryScore
         )
-        turnOffBars()
     }
     composable(route = RecommendationsTestResult.route) {
         val summaryScore by testsViewModel.summaryScore.collectAsState()
@@ -136,6 +128,5 @@ fun NavGraphBuilder.testsNavGraph(
             onNavigateBack = { navController.navigateUp() },
             summaryScore = summaryScore
         )
-        turnOffBars()
     }
 }
