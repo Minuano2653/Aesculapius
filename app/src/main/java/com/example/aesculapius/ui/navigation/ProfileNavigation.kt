@@ -40,8 +40,6 @@ import java.time.format.DateTimeFormatter
 
 fun NavGraphBuilder.profileNavGraph(
     userUiState: SignUpUiState,
-    turnOffBars: () -> Unit,
-    turnOnBars: () -> Unit,
     onProfileEvent: (ProfileEvent) -> Unit,
     navController: NavHostController,
     selectedMedicine: MedicineCard?,
@@ -52,7 +50,6 @@ fun NavGraphBuilder.profileNavGraph(
             modifier = Modifier.padding(top = 24.dp),
             onNavigate = navController::navigate
         )
-        turnOnBars()
     }
     composable(route = SetReminderTimeProfile.route) {
         SetReminderTimeProfile(
@@ -61,7 +58,6 @@ fun NavGraphBuilder.profileNavGraph(
             onNavigateBack = { navController.navigateUp() },
             onClickSetReminder = { navController.navigate("${SetReminderTime.route}/${it}") },
         )
-        turnOffBars()
     }
     composable(route = EditProfileScreen.route) {
         EditProfileScreen(
@@ -69,7 +65,6 @@ fun NavGraphBuilder.profileNavGraph(
             user = userUiState,
             onSaveNewUser = { onProfileEvent(ProfileEvent.OnSaveNewUser(it)) }
         )
-        turnOffBars()
     }
     composable(
         route = SetReminderTime.routeWithArgs,
@@ -120,7 +115,6 @@ fun NavGraphBuilder.profileNavGraph(
             onNavigateBack = { navController.navigateUp() },
             onClickItem = { name, text -> navController.navigate("${LearnItemScreen.route}/$name^$text") }
         )
-        turnOffBars()
     }
     composable(
         route = LearnItemScreen.routeWithArgs,
@@ -134,13 +128,11 @@ fun NavGraphBuilder.profileNavGraph(
             name = stringResource(id = arg[0]),
             text = stringResource(id = arg[1])
         )
-        turnOffBars()
     }
 
     // ─── Симптомы ─────────────────────────────────────────────────────────────
     composable(route = SymptomsScreen.route) {
         SymptomsScreen(onNavigateBack = { navController.navigateUp() })
-        turnOffBars()
     }
 
     // ─── Управление препаратами из профиля ───────────────────────────────────
@@ -153,7 +145,6 @@ fun NavGraphBuilder.profileNavGraph(
             },
             onNavigateToNew = { navController.navigate(NewMedicineFromProfile.route) }
         )
-        turnOffBars()
     }
 
     composable(route = EditMedicineFromProfile.route) {
@@ -161,14 +152,12 @@ fun NavGraphBuilder.profileNavGraph(
             medicine = selectedMedicine!!,
             onNavigateBack = { navController.navigateUp() },
         )
-        turnOffBars()
     }
 
     composable(route = NewMedicineFromProfile.route) {
         NewMedicineScreen(
             onNavigateBack = { navController.navigateUp() },
         )
-        turnOffBars()
     }
 
     // ─── Air Quality ───────────────────────────────────────────────────────
@@ -181,7 +170,6 @@ fun NavGraphBuilder.profileNavGraph(
                 }
             }
         )
-        turnOffBars()
     }
 
     composable(route = AirQualityScreen.route) {
@@ -189,6 +177,5 @@ fun NavGraphBuilder.profileNavGraph(
             onNavigateBack = { navController.navigateUp() },
             onEditLocation = { navController.navigate(LocationPickerScreen.route) }
         )
-        turnOffBars()
     }
 }

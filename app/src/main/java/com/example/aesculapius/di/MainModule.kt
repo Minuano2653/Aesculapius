@@ -12,6 +12,8 @@ import com.example.aesculapius.database.ItemDAO
 import com.example.aesculapius.database.UserRemoteDataRepository
 import com.example.aesculapius.worker.DaggerWorkerFactory
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
 import dagger.Module
@@ -45,5 +47,11 @@ object MainModule {
     @Singleton
     fun provideFirestore(): FirebaseFirestore {
         return Firebase.firestore
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseAuth(): FirebaseAuth {
+        return Firebase.auth
     }
 }

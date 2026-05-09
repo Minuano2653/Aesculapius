@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(Get-ChildItem -Path \"G:\\\\STUDY\\\\Diploma\\\\Aesculapius\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(./gradlew :app:compileDebugKotlin)",
+      "Bash(Get-ChildItem -Force)"
+    ]
+  }
+}

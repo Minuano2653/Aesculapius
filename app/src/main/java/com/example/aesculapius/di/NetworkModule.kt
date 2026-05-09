@@ -3,6 +3,7 @@ package com.example.aesculapius.di
 import com.example.aesculapius.BuildConfig
 import com.example.aesculapius.data.airquality.remote.OpenWeatherApi
 import com.example.aesculapius.data.airquality.remote.YandexGeocoderApi
+import com.example.aesculapius.data.pdf.remote.PdfApi
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -13,10 +14,13 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 private const val OPEN_WEATHER_BASE_URL = "https://api.openweathermap.org/"
 private const val GEOCODER_BASE_URL = "https://geocode-maps.yandex.ru/"
+private const val PDF_TIMEOUT_SECONDS = 60L
+private const val PDF_CALL_TIMEOUT_SECONDS = 90L
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -79,4 +83,36 @@ object NetworkModule {
     @Singleton
     @GeocoderApiKey
     fun provideGeocoderApiKey(): String = BuildConfig.GEOCODER_API_KEY
+
+    @Provides
+    @Singleton
+    @PdfOkHttp
+    fun providePdfOkHttpClient(): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.HEADERS
+            else HttpLoggingInterceptor.Level.NONE
+        }
+        return OkHttpClient.Builder()
+            .addInterceptor(logging)
+            .connectTimeout(PDF_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(PDF_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(PDF_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .callTimeout(PDF_CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @PdfRetrofit
+    fun providePdfRetrofit(@PdfOkHttp client: OkHttpClient, moshi: Moshi): Retrofit =
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.PDF_BASE_URL)
+            .client(client)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+
+    @Provides
+    @Singleton
+    fun providePdfApi(@PdfRetrofit retrofit: Retrofit): PdfApi =
+        retrofit.create(PdfApi::class.java)
 }

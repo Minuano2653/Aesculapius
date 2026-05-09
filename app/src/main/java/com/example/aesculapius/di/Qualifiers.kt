@@ -17,3 +17,11 @@ annotation class OpenWeatherRetrofit
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class GeocoderRetrofit
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class PdfRetrofit
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class PdfOkHttp

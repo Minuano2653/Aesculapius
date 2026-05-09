@@ -40,12 +40,12 @@ val navigationItemContentList = listOf(
         icon = R.drawable.calendar_icon
     ),
     NavigationItemContent(
-        pageType = TestsScreen.route,
-        icon = R.drawable.tests_icon
-    ),
-    NavigationItemContent(
         pageType = DiaryScreen.route,
         icon = R.drawable.diary_icon
+    ),
+    NavigationItemContent(
+        pageType = TestsScreen.route,
+        icon = R.drawable.tests_icon
     ),
     NavigationItemContent(
         pageType = ProfileScreen.route,
