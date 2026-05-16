@@ -27,13 +27,11 @@ import com.example.aesculapius.ui.tests.RecommendationsTestResult
 import com.example.aesculapius.ui.tests.TestScreen
 import com.example.aesculapius.ui.tests.TestsEvent
 import com.example.aesculapius.ui.tests.TestsScreen
-import com.example.aesculapius.ui.tests.TestsViewModel
+import com.example.aesculapius.ui.tests.rememberTestsViewModel
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 fun NavGraphBuilder.testsNavGraph(
     onProfileEvent: (ProfileEvent) -> Unit,
-    testsViewModel: TestsViewModel,
     userUiState: SignUpUiState,
     navController: NavHostController
 ) {
@@ -54,6 +52,7 @@ fun NavGraphBuilder.testsNavGraph(
         arguments = listOf(navArgument(name = TestScreen.depart) { type = NavType.StringType })
     ) { backStackEntry ->
         val context = LocalContext.current
+        val testsViewModel = rememberTestsViewModel(navController)
         val arg = TestType.valueOf(
             backStackEntry.arguments?.getString(TestScreen.depart) ?: TestType.AST.toString()
         )
@@ -114,6 +113,7 @@ fun NavGraphBuilder.testsNavGraph(
         )
     }
     composable(route = AstTestResult.route) {
+        val testsViewModel = rememberTestsViewModel(navController)
         val summaryScore by testsViewModel.summaryScore.collectAsState()
         ASTTestResultScreen(
             onClickReturnButton = { navController.navigate(TestsScreen.route) },
@@ -122,6 +122,7 @@ fun NavGraphBuilder.testsNavGraph(
         )
     }
     composable(route = RecommendationsTestResult.route) {
+        val testsViewModel = rememberTestsViewModel(navController)
         val summaryScore by testsViewModel.summaryScore.collectAsState()
         RecommendationsTestResult(
             onClickReturnButton = { navController.navigate(TestsScreen.route) },

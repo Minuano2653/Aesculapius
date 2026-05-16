@@ -1,5 +1,6 @@
 package com.example.aesculapius.ui.login
 
+import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.aesculapius.R
@@ -64,6 +65,59 @@ class LoginViewModel @Inject constructor(private val userAuthRepository: UserAut
                         e.printStackTrace()
                     }
                 }
+
+            LoginEvent.OnOpenResetSheet ->
+                _loginUiState.update {
+                    it.copy(
+                        showResetSheet = true,
+                        resetEmail = it.login,
+                        resetEmailError = ""
+                    )
+                }
+
+            LoginEvent.OnDismissResetSheet ->
+                _loginUiState.update {
+                    it.copy(
+                        showResetSheet = false,
+                        resetEmail = "",
+                        resetEmailError = "",
+                        isResetSending = false
+                    )
+                }
+
+            is LoginEvent.OnResetEmailChanged ->
+                _loginUiState.update { it.copy(resetEmail = event.email, resetEmailError = "") }
+
+            is LoginEvent.OnSendResetEmail -> {
+                val email = event.email.trim()
+                if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    _loginUiState.update { it.copy(resetEmailError = "Неверный формат почты") }
+                } else {
+                    _loginUiState.update { it.copy(isResetSending = true) }
+                    userAuthRepository.sendPasswordResetEmail(email) { isSuccessful, error ->
+                        viewModelScope.launch {
+                            if (isSuccessful) {
+                                _loginUiState.update {
+                                    it.copy(
+                                        showResetSheet = false,
+                                        resetEmail = "",
+                                        resetEmailError = "",
+                                        isResetSending = false
+                                    )
+                                }
+                                _uiEvent.send(LoginUiEvent.ShowToast(R.string.password_reset_sent))
+                            } else {
+                                _loginUiState.update { it.copy(isResetSending = false) }
+                                val messageRes = when (error) {
+                                    is FirebaseNetworkException -> R.string.check_internet_connection
+                                    else -> R.string.something_went_wrong
+                                }
+                                _uiEvent.send(LoginUiEvent.ShowToast(messageRes))
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

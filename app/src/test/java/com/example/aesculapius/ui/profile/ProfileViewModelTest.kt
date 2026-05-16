@@ -4,12 +4,16 @@ import android.app.AlarmManager
 import android.content.Context
 import com.example.aesculapius.database.UserPreferencesRepository
 import com.example.aesculapius.database.UserRemoteDataRepository
+import com.example.aesculapius.domain.airquality.usecases.GetSavedAirQualityCacheFlowUseCase
+import com.example.aesculapius.domain.airquality.usecases.RefreshAirQualityForSavedLocationUseCase
+import com.example.aesculapius.domain.auth.usecases.SignOutUseCase
 import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.domain.profile.usecases.GetUserActivityScoreUseCase
 import com.example.aesculapius.ui.signup.SignUpUiState
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,6 +38,9 @@ class ProfileViewModelTest {
     private lateinit var remoteRepository: UserRemoteDataRepository
     private lateinit var context: Context
     private lateinit var getUserActivityScoreUseCase: GetUserActivityScoreUseCase
+    private lateinit var getSavedAirQualityCacheFlowUseCase: GetSavedAirQualityCacheFlowUseCase
+    private lateinit var refreshAirQualityForSavedLocationUseCase: RefreshAirQualityForSavedLocationUseCase
+    private lateinit var signOutUseCase: SignOutUseCase
 
     private val userFlow = MutableStateFlow(SignUpUiState())
 
@@ -49,8 +56,12 @@ class ProfileViewModelTest {
         prefRepository = mockk()
         remoteRepository = mockk(relaxed = true)
         getUserActivityScoreUseCase = mockk()
+        getSavedAirQualityCacheFlowUseCase = mockk()
+        refreshAirQualityForSavedLocationUseCase = mockk(relaxed = true)
+        signOutUseCase = mockk(relaxed = true)
 
         every { prefRepository.user } returns userFlow
+        every { getSavedAirQualityCacheFlowUseCase() } returns flowOf(null)
     }
 
     @After
@@ -62,7 +73,10 @@ class ProfileViewModelTest {
         prefRepository = prefRepository,
         userRemoteDataRepository = remoteRepository,
         context = context,
-        getUserActivityScoreUseCase = getUserActivityScoreUseCase
+        getUserActivityScoreUseCase = getUserActivityScoreUseCase,
+        getSavedAirQualityCacheFlowUseCase = getSavedAirQualityCacheFlowUseCase,
+        refreshAirQualityForSavedLocationUseCase = refreshAirQualityForSavedLocationUseCase,
+        signOutUseCase = signOutUseCase,
     )
 
     @Test

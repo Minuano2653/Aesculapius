@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.aesculapius.ui.home.TopBar
 
@@ -30,6 +31,7 @@ fun TopBar(
     existHelpButton: Boolean = false,
     onClickHelpButton: () -> Unit = {},
     rightIcon: Painter? = null,
+    rightIconVector: ImageVector? = null,
     onClickRightIcon: () -> Unit = {}
 ) {
     Row(
@@ -73,6 +75,18 @@ fun TopBar(
             ) {
                 Icon(
                     painter = rightIcon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.onTertiary
+                )
+            }
+        else if (rightIconVector != null)
+            IconButton(
+                onClick = { onClickRightIcon() },
+                modifier = Modifier.padding(end = 12.dp)
+            ) {
+                Icon(
+                    imageVector = rightIconVector,
                     contentDescription = null,
                     modifier = Modifier.size(24.dp),
                     tint = MaterialTheme.colorScheme.onTertiary

@@ -15,6 +15,7 @@ import com.example.aesculapius.database.UserRemoteDataRepository
 import com.example.aesculapius.domain.airquality.model.AirQualityCache
 import com.example.aesculapius.domain.airquality.usecases.GetSavedAirQualityCacheFlowUseCase
 import com.example.aesculapius.domain.airquality.usecases.RefreshAirQualityForSavedLocationUseCase
+import com.example.aesculapius.domain.auth.usecases.SignOutUseCase
 import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.domain.profile.usecases.GetUserActivityScoreUseCase
 import com.example.aesculapius.notifications.MetricsAlarm
@@ -40,7 +41,8 @@ class ProfileViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getUserActivityScoreUseCase: GetUserActivityScoreUseCase,
     getSavedAirQualityCacheFlowUseCase: GetSavedAirQualityCacheFlowUseCase,
-    private val refreshAirQualityForSavedLocationUseCase: RefreshAirQualityForSavedLocationUseCase
+    private val refreshAirQualityForSavedLocationUseCase: RefreshAirQualityForSavedLocationUseCase,
+    private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
     private val morningAlarmManager =
         context.getSystemService(ALARM_SERVICE) as AlarmManager
@@ -112,6 +114,10 @@ class ProfileViewModel @Inject constructor(
 
             ProfileEvent.OnRefreshAirQuality -> {
                 runCatching { refreshAirQualityForSavedLocationUseCase() }
+            }
+
+            ProfileEvent.OnSignOut -> {
+                signOutUseCase()
             }
 
             is ProfileEvent.OnLoginUser -> {

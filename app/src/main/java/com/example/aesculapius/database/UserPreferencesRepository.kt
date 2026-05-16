@@ -163,4 +163,8 @@ class UserPreferencesRepository @Inject constructor(
             preferences[AQI_FETCHED_AT] = data.fetchedAt
         }
     }
+
+    suspend fun clearUserData() {
+        settingDataStore.edit { it.clear() }
+    }
 }

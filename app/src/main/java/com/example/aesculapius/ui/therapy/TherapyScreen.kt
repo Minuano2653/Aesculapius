@@ -30,18 +30,24 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -77,6 +83,7 @@ import io.github.boguszpawlowski.composecalendar.rememberSelectableWeekCalendarS
 import io.github.boguszpawlowski.composecalendar.selection.DynamicSelectionState
 import io.github.boguszpawlowski.composecalendar.week.Week
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -89,22 +96,24 @@ object TherapyScreen : NavigationDestination {
     override val route = "TherapyScreen"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TherapyScreen(
-    getAmountNotAcceptedMedicines: suspend (LocalDate) -> Int,
-    therapyEvent: (TherapyEvent) -> Unit,
-    currentDate: LocalDate,
-    updateCurrentDate: (LocalDate) -> Boolean,
-    currentLoadingState: CurrentLoadingState,
-    generalLoadingState: GeneralLoadingState,
-    currentWeekDates: Week,
     onNavigate: (String) -> Unit,
-    isAfterCurrentDate: Boolean,
-    isWeek: Boolean,
-    onClickMedicine: (MedicineCard) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: TherapyViewModel = hiltViewModel()
 ) {
+    val currentLoadingState by viewModel.currentLoadingState.collectAsState()
+    val generalLoadingState by viewModel.generalLoadingState.collectAsState()
+    val currentWeekDates by viewModel.currentWeekDates.collectAsState()
+    val isWeek by viewModel.isWeek.collectAsState()
+    val currentDate = viewModel.getCurrentDate()
+    val isAfterCurrentDate = currentDate.isAfter(LocalDate.now())
+
     var isMorningMedicines by remember { mutableStateOf(true) }
+    var currentMedicine by remember { mutableStateOf<MedicineCard?>(null) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
 
     Box {
         LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -124,15 +133,15 @@ fun TherapyScreen(
                 is GeneralLoadingState.Success -> {
                     item {
                         CalendarItem(
-                            getAmountNotAcceptedMedicines = getAmountNotAcceptedMedicines,
+                            getAmountNotAcceptedMedicines = viewModel::getAmountNotAcceptedMedicines,
                             currentDate = currentDate,
-                            onDateChanged = { updateCurrentDate(it) },
+                            onDateChanged = { viewModel.updateCurrentDate(it) },
                             weekDates = currentWeekDates,
                             isWeek = isWeek,
-                            therapyEvent = therapyEvent
+                            therapyEvent = viewModel::onTherapyEvent
                         )
                     }
-                    when (currentLoadingState) {
+                    when (val loadedState = currentLoadingState) {
                         is CurrentLoadingState.Loading -> item {
                             Box(modifier = Modifier.fillMaxSize()) {
                                 CircularProgressIndicator(
@@ -145,7 +154,7 @@ fun TherapyScreen(
 
                         is CurrentLoadingState.Success -> {
 
-                            val currentMedicines = currentLoadingState.therapyUiState
+                            val currentMedicines = loadedState.therapyUiState
 
                             item {
                                 Card(
@@ -339,7 +348,7 @@ fun TherapyScreen(
                                         MedicineCard(
                                             medicine = medicine,
                                             modifier = Modifier.padding(bottom = 8.dp),
-                                            onClick = { onClickMedicine(medicine) },
+                                            onClick = { currentMedicine = medicine },
                                             isSkipped = false,
                                             isAccepted = false,
                                             isMorning = true,
@@ -350,7 +359,7 @@ fun TherapyScreen(
                                         MedicineCard(
                                             medicine = medicine,
                                             modifier = Modifier.padding(bottom = 8.dp),
-                                            onClick = { onClickMedicine(medicine) },
+                                            onClick = { currentMedicine = medicine },
                                             isSkipped = false,
                                             isAccepted = false,
                                             isMorning = false,
@@ -377,7 +386,7 @@ fun TherapyScreen(
                                         MedicineCard(
                                             medicine = medicine,
                                             modifier = Modifier.padding(bottom = 8.dp),
-                                            onClick = { onClickMedicine(medicine) },
+                                            onClick = { currentMedicine = medicine },
                                             isSkipped = medicine.isSkipped,
                                             isAccepted = medicine.isAccepted,
                                             isMorning = true,
@@ -403,7 +412,7 @@ fun TherapyScreen(
                                         MedicineCard(
                                             medicine = medicine,
                                             modifier = Modifier.padding(bottom = 8.dp),
-                                            onClick = { onClickMedicine(medicine) },
+                                            onClick = { currentMedicine = medicine },
                                             isSkipped = medicine.isSkipped,
                                             isAccepted = medicine.isAccepted,
                                             isMorning = false,
@@ -415,6 +424,29 @@ fun TherapyScreen(
                     }
                 }
             }
+        }
+    }
+
+    currentMedicine?.let { medicine ->
+        ModalBottomSheet(
+            onDismissRequest = { currentMedicine = null },
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            tonalElevation = 0.dp
+        ) {
+            EditMedicineSheet(
+                medicine = medicine,
+                acceptMedicine = { doseId ->
+                    viewModel.onTherapyEvent(TherapyEvent.OnAcceptMedicine(doseId))
+                    scope.launch { sheetState.hide() }
+                        .invokeOnCompletion { currentMedicine = null }
+                },
+                skipMedicine = { doseId ->
+                    viewModel.onTherapyEvent(TherapyEvent.OnSkipMedicine(doseId))
+                    scope.launch { sheetState.hide() }
+                        .invokeOnCompletion { currentMedicine = null }
+                },
+            )
         }
     }
 }
@@ -799,50 +831,7 @@ fun CalendarItem(
 fun PreviewTherapyScreen() {
     AesculapiusTheme {
         TherapyScreen(
-            getAmountNotAcceptedMedicines = { 30 },
-            therapyEvent = {},
-            currentDate = LocalDate.now(),
-            updateCurrentDate = { true },
-            currentLoadingState = CurrentLoadingState.Success(
-                TherapyUiState(
-                    currentMorningMedicines = listOf(
-                        MedicineCard(
-                            id = 12,
-                            name = "препарат",
-                            undername = "подпрепарат",
-                            dose = "12мг/доза",
-                            frequency = "2 дозы",
-                            isSkipped = false,
-                            isAccepted = true,
-                            doseId = 12,
-                            endDate = LocalDate.now(),
-                            startDate = LocalDate.now(),
-                            fullFrequency = "2 дозы 2 раза в день",
-                            medicineType = CurrentMedicineType.Aerosol
-                        ),
-                        MedicineCard(
-                            id = 12,
-                            name = "длинный препарат препарат",
-                            undername = "подпрепарат",
-                            dose = "12мг/доза",
-                            frequency = "2 дозы",
-                            isSkipped = true,
-                            isAccepted = false,
-                            doseId = 12,
-                            endDate = LocalDate.now(),
-                            startDate = LocalDate.now(),
-                            fullFrequency = "2 дозы 2 раза в день",
-                            medicineType = CurrentMedicineType.Aerosol
-                        )
-                    )
-                )
-            ),
-            generalLoadingState = GeneralLoadingState.Success,
-            currentWeekDates = Week.now(),
             onNavigate = {},
-            isAfterCurrentDate = false,
-            isWeek = true,
-            onClickMedicine = {},
             modifier = Modifier.padding(horizontal = 12.dp)
         )
     }
