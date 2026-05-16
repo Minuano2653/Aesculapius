@@ -1,20 +1,30 @@
 package com.example.aesculapius.ui.login
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -145,6 +155,18 @@ fun LoginScreenContent(
                         color = errorLoginField
                     )
                 }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(onClick = { onLoginEvent(LoginEvent.OnOpenResetSheet) }) {
+                    Text(
+                        text = stringResource(R.string.forgot_password),
+                        style = MaterialTheme.typography.displaySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Button(
                 onClick = {
                     onLoginEvent(
@@ -166,12 +188,120 @@ fun LoginScreenContent(
                     style = MaterialTheme.typography.displaySmall
                 )
             }
+
             TextButton(onClick = { navigate(SignUpScreen.route) }) {
                 Text(
                     text = stringResource(R.string.new_user),
                     style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.primary
                 )
+            }
+        }
+    }
+
+    if (loginUiState.showResetSheet) {
+        ResetPasswordBottomSheet(
+            email = loginUiState.resetEmail,
+            emailError = loginUiState.resetEmailError,
+            isSending = loginUiState.isResetSending,
+            onEmailChanged = { onLoginEvent(LoginEvent.OnResetEmailChanged(it)) },
+            onSendClicked = { onLoginEvent(LoginEvent.OnSendResetEmail(loginUiState.resetEmail)) },
+            onDismiss = { onLoginEvent(LoginEvent.OnDismissResetSheet) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ResetPasswordBottomSheet(
+    email: String,
+    emailError: String,
+    isSending: Boolean,
+    onEmailChanged: (String) -> Unit,
+    onSendClicked: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        tonalElevation = 0.dp,
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(top = 8.dp, bottom = 16.dp)
+                .navigationBarsPadding()
+                .imePadding(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.password_recovery_title),
+                style = MaterialTheme.typography.titleLarge
+            )
+            OutlinedTextField(
+                value = email,
+                onValueChange = onEmailChanged,
+                label = {
+                    Text(
+                        text = stringResource(R.string.password_recovery_hint),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    )
+                },
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Email
+                ),
+                singleLine = true,
+                isError = emailError.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.primary
+                )
+            )
+            if (emailError.isNotEmpty())
+                Text(
+                    text = emailError,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = errorLoginField,
+                    modifier = Modifier.padding(start = 16.dp)
+                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(
+                    modifier = Modifier.widthIn(min = 106.dp),
+                    onClick = onDismiss
+                ) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(Modifier.padding(horizontal = 4.dp))
+                Button(
+                    modifier = Modifier.widthIn(min = 106.dp),
+                    onClick = onSendClicked,
+                    enabled = email.isNotBlank() && !isSending,
+                    shape = MaterialTheme.shapes.small,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.tertiaryContainer
+                    ),
+                ) {
+                    Text(
+                        text = stringResource(R.string.send),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
             }
         }
     }

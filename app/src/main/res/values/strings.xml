@@ -157,13 +157,13 @@
         \nЛучше выбрать одно и то же время утром и вечером (например, 9.00 и 21.00), но это не обязательно.
         \nЗапиши результат!
     </string>
-    <string name="enter_comfortable_time">Введите удобное для тебя время</string>
+    <string name="enter_comfortable_time">Введи удобное для тебя время</string>
     <string name="hours">Часы</string>
     <string name="minutes">Минуты</string>
     <string name="back">Назад</string>
     <string name="wrong_time_format">Неверный формат времени</string>
     <string name="wrong_numbers">Введи корректные числа</string>
-    <string name="ok">Ок</string>
+    <string name="ok">ОК</string>
     <string name="wrong_data">Введи корректные данные</string>
     <string name="next">Дальше</string>
     <string name="set_time_reminders">Настрой время напоминаний для пикфлоуметрии</string>
@@ -323,4 +323,15 @@
     <string name="location_permission_required">Разреши доступ к геолокации в настройках</string>
     <string name="enable_location_services">Включи геолокацию, чтобы определить позицию</string>
     <string name="location_unavailable">Не удалось определить местоположение</string>
+
+    <!-- Auth -->
+    <string name="sign_out">Выйти</string>
+    <string name="sign_out_confirm_title">Выход из аккаунта</string>
+    <string name="sign_out_confirm_message">Вы уверены, что хотите выйти?</string>
+    <string name="forgot_password">Восстановить пароль</string>
+    <string name="password_recovery_title">Восстановление пароля</string>
+    <string name="password_recovery_hint">Введите вашу почту</string>
+    <string name="send">Отправить</string>
+    <string name="password_reset_sent">Письмо для сброса отправлено на почту</string>
+    <string name="wrong_email_format">Неверный формат почты</string>
 </resources>

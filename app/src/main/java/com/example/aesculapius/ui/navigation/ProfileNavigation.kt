@@ -63,7 +63,8 @@ fun NavGraphBuilder.profileNavGraph(
         EditProfileScreen(
             onNavigateBack = { navController.navigateUp() },
             user = userUiState,
-            onSaveNewUser = { onProfileEvent(ProfileEvent.OnSaveNewUser(it)) }
+            onSaveNewUser = { onProfileEvent(ProfileEvent.OnSaveNewUser(it)) },
+            onSignOut = { onProfileEvent(ProfileEvent.OnSignOut) }
         )
     }
     composable(

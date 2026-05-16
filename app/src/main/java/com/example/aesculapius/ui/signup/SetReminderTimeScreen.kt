@@ -40,6 +40,7 @@ import com.example.aesculapius.R
 import com.example.aesculapius.ui.TopBar
 import com.example.aesculapius.ui.navigation.NavigationDestination
 import com.example.aesculapius.ui.theme.AesculapiusTheme
+import com.example.aesculapius.ui.theme.reminder
 import java.time.LocalDateTime
 
 object SetReminderTime : NavigationDestination {
@@ -125,7 +126,11 @@ fun SetReminderTimeScreen(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = { onNavigateBack() }) {
-                        Text(text = stringResource(R.string.back), fontSize = 14.sp)
+                        Text(
+                            text = stringResource(R.string.back),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp
+                        )
                     }
                     TextButton(onClick = {
                         try {
@@ -148,7 +153,11 @@ fun SetReminderTimeScreen(
                             Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
                         }
                     }) {
-                        Text(text = stringResource(R.string.ok), fontSize = 14.sp)
+                        Text(
+                            text = stringResource(R.string.ok),
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 }
             }
@@ -176,7 +185,7 @@ fun TextInputTime(
         colors = TextFieldDefaults.outlinedTextFieldColors(
             focusedLabelColor = MaterialTheme.colorScheme.primary,
             unfocusedLabelColor = MaterialTheme.colorScheme.inversePrimary,
-            containerColor = MaterialTheme.colorScheme.scrim
+            containerColor = reminder
         ),
         shape = MaterialTheme.shapes.small
     )

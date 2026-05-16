@@ -41,4 +41,19 @@ class UserAuthRepository @Inject constructor() {
                     onComplete(false, it.exception as FirebaseException, auth.currentUser?.uid.orEmpty())
             }
     }
+
+    fun signOut() {
+        auth.signOut()
+    }
+
+    fun sendPasswordResetEmail(
+        email: String,
+        onComplete: (Boolean, FirebaseException?) -> Unit
+    ) {
+        auth.sendPasswordResetEmail(email)
+            .addOnCompleteListener {
+                if (it.isSuccessful) onComplete(true, null)
+                else onComplete(false, it.exception as? FirebaseException)
+            }
+    }
 }

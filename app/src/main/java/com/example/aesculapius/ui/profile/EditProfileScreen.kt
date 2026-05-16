@@ -11,9 +11,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +56,7 @@ fun EditProfileScreen(
     onNavigateBack: () -> Unit,
     user: SignUpUiState,
     onSaveNewUser: (SignUpUiState) -> Unit,
+    onSignOut: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -60,12 +65,15 @@ fun EditProfileScreen(
     val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     var tempBirthday by remember { mutableStateOf(user.birthday.format(formatter)) }
     val pattern = Pattern.compile("^\\d{0,2}/\\d{0,2}/\\d{0,4}$")
+    var showSignOutDialog by remember { mutableStateOf(false) }
 
     Scaffold(topBar = {
         TopBar(
             text = stringResource(R.string.profile),
             existHelpButton = true,
-            onNavigateBack = onNavigateBack
+            onNavigateBack = onNavigateBack,
+            rightIconVector = Icons.Filled.Logout,
+            onClickRightIcon = { showSignOutDialog = true }
         )
     }) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -202,6 +210,46 @@ fun EditProfileScreen(
                 )
             }
         }
+    }
+
+    if (showSignOutDialog) {
+        AlertDialog(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+            onDismissRequest = { showSignOutDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.sign_out_confirm_title),
+                    style = MaterialTheme.typography.displayMedium
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(R.string.sign_out_confirm_message),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showSignOutDialog = false
+                    onSignOut()
+                }) {
+                    Text(
+                        text = stringResource(R.string.confirm),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutDialog = false }) {
+                    Text(
+                        text = stringResource(R.string.cancel),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        )
     }
 }
 
