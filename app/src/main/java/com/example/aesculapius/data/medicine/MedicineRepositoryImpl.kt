@@ -6,6 +6,7 @@ import com.example.aesculapius.data.medicine.remote.RemoteMedicineDataSource
 import com.example.aesculapius.domain.medicine.MedicineRepository
 import com.example.aesculapius.ui.therapy.MedicineItem
 import com.example.aesculapius.ui.therapy.MedicineWithDoses
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -83,6 +84,9 @@ class MedicineRepositoryImpl @Inject constructor(
 
     override suspend fun getAllMedicines(): List<MedicineItem> =
         local.getAllMedicines()
+
+    override fun getAllMedicinesFlow(): Flow<List<MedicineItem>> =
+        local.getAllMedicinesFlow()
 
     override suspend fun getMedicinesInPeriod(startDate: LocalDate, endDate: LocalDate): List<MedicineWithDoses> =
         local.getMedicinesInPeriod(startDate, endDate)

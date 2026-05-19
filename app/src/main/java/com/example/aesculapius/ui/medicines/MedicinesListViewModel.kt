@@ -8,11 +8,11 @@ import com.example.aesculapius.domain.medicine.usecases.DeleteMedicineUseCase
 import com.example.aesculapius.domain.medicine.usecases.GetAllMedicinesUseCase
 import com.example.aesculapius.domain.medicine.usecases.UpdateMedicineUseCase
 import com.example.aesculapius.ui.therapy.MedicineItem
-import com.example.aesculapius.ui.therapy.TherapyEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,22 +21,12 @@ class MedicinesListViewModel @Inject constructor(
     private val addMedicineUseCase: AddMedicineUseCase,
     private val updateMedicineUseCase: UpdateMedicineUseCase,
     private val deleteMedicineUseCase: DeleteMedicineUseCase,
-    private val getAllMedicinesUseCase: GetAllMedicinesUseCase,
+    getAllMedicinesUseCase: GetAllMedicinesUseCase,
     private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
-    private val _medicines = MutableStateFlow<List<MedicineItem>>(emptyList())
-    val medicines: StateFlow<List<MedicineItem>> = _medicines
-
-    init {
-        loadMedicines()
-    }
-
-    fun loadMedicines() {
-        viewModelScope.launch {
-            _medicines.value = getAllMedicinesUseCase()
-        }
-    }
+    val medicines: StateFlow<List<MedicineItem>> = getAllMedicinesUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun onEvent(event: MedicineEvent) {
         when (event) {
@@ -53,7 +43,6 @@ class MedicinesListViewModel @Inject constructor(
                         event.startDate,
                         event.endDate
                     )
-                    loadMedicines()
                 }
             }
 
@@ -69,7 +58,6 @@ class MedicinesListViewModel @Inject constructor(
                         event.startDate,
                         event.endDate
                     )
-                    loadMedicines()
                 }
             }
 
@@ -77,7 +65,6 @@ class MedicinesListViewModel @Inject constructor(
                 viewModelScope.launch {
                     val userId = userPreferencesRepository.user.first().id ?: ""
                     deleteMedicineUseCase(userId, event.medicineId)
-                    loadMedicines()
                 }
             }
         }

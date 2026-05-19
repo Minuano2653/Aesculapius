@@ -64,6 +64,9 @@ interface ItemDAO {
     @Query("SELECT * from medicines_items")
     suspend fun getAllMedicines(): List<MedicineItem>
 
+    @Query("SELECT * from medicines_items")
+    fun getAllMedicinesFlow(): Flow<List<MedicineItem>>
+
     @Query("SELECT * from medicines_items WHERE (endDate >= :begin) AND (startDate <= :end)")
     suspend fun getAllMedicinesInPeriod(begin: LocalDate, end: LocalDate): List<MedicineWithDoses>
 

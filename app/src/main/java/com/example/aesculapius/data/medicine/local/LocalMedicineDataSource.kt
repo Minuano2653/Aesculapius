@@ -6,6 +6,7 @@ import com.example.aesculapius.database.ItemDAO
 import com.example.aesculapius.ui.therapy.DoseItem
 import com.example.aesculapius.ui.therapy.MedicineItem
 import com.example.aesculapius.ui.therapy.MedicineWithDoses
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -61,6 +62,9 @@ class LocalMedicineDataSource @Inject constructor(
 
     suspend fun getAllMedicines(): List<MedicineItem> =
         aesculapiusRepository.getAllMedicines()
+
+    fun getAllMedicinesFlow(): Flow<List<MedicineItem>> =
+        aesculapiusRepository.getAllMedicinesFlow()
 
     suspend fun getMedicinesInPeriod(startDate: LocalDate, endDate: LocalDate): List<MedicineWithDoses> =
         aesculapiusRepository.getAllMedicinesInPeriod(startDate, endDate)

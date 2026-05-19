@@ -3,6 +3,7 @@ package com.example.aesculapius.domain.medicine
 import com.example.aesculapius.data.CurrentMedicineType
 import com.example.aesculapius.ui.therapy.MedicineItem
 import com.example.aesculapius.ui.therapy.MedicineWithDoses
+import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
 interface MedicineRepository {
@@ -37,6 +38,8 @@ interface MedicineRepository {
     suspend fun getMedicinesForDate(date: LocalDate): List<MedicineWithDoses>
 
     suspend fun getAllMedicines(): List<MedicineItem>
+
+    fun getAllMedicinesFlow(): Flow<List<MedicineItem>>
 
     suspend fun getMedicinesInPeriod(startDate: LocalDate, endDate: LocalDate): List<MedicineWithDoses>
 

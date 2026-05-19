@@ -4,6 +4,9 @@ import com.example.aesculapius.domain.medicine.usecases.GetMedicinesScoreUseCase
 import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.domain.tests.usecases.GetAllAstResultsUseCase
 import com.example.aesculapius.domain.tests.usecases.GetLinePointsAmountUseCase
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import kotlinx.datetime.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject

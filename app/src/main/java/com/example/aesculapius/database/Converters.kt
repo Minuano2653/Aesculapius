@@ -54,10 +54,6 @@ class Converters {
             return if (time == null) LocalDateTime.now() else LocalDateTime.parse(time, formatter)
         }
 
-        fun stringToDateNoFormat(date: String?): LocalDate {
-            return if (date == null) LocalDate.now() else LocalDate.parse(date)
-        }
-
         fun dateToStringWithFormat(date: LocalDate): String {
             val formatter = DateTimeFormatter.ofPattern("dd MM yyyy");
             return date.format(formatter)

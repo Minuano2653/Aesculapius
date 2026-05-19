@@ -18,15 +18,15 @@ import com.example.aesculapius.domain.airquality.usecases.RefreshAirQualityForSa
 import com.example.aesculapius.domain.auth.usecases.SignOutUseCase
 import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.domain.profile.usecases.GetUserActivityScoreUseCase
+import com.example.aesculapius.domain.profile.usecases.GetUserRegisterDateUseCase
 import com.example.aesculapius.notifications.MetricsAlarm
 import com.example.aesculapius.ui.signup.SignUpUiState
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
@@ -40,6 +40,7 @@ class ProfileViewModel @Inject constructor(
     private val userRemoteDataRepository: UserRemoteDataRepository,
     @ApplicationContext private val context: Context,
     private val getUserActivityScoreUseCase: GetUserActivityScoreUseCase,
+    private val getUserRegisterDateUseCase: GetUserRegisterDateUseCase,
     getSavedAirQualityCacheFlowUseCase: GetSavedAirQualityCacheFlowUseCase,
     private val refreshAirQualityForSavedLocationUseCase: RefreshAirQualityForSavedLocationUseCase,
     private val signOutUseCase: SignOutUseCase,
@@ -56,14 +57,13 @@ class ProfileViewModel @Inject constructor(
             initialValue = SignUpUiState()
         )
 
-    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    val activityState: StateFlow<UserActivityResult> = prefRepository.user
-        .transformLatest { user -> emit(getUserActivityScoreUseCase(user.userRegisterDate)) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = UserActivityResult()
-        )
+    val activityState: StateFlow<UserActivityResult> = flow {
+        emit(getUserActivityScoreUseCase(getUserRegisterDateUseCase()))
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = UserActivityResult()
+    )
 
     val airQualityState: StateFlow<AirQualityCache?> = getSavedAirQualityCacheFlowUseCase()
         .stateIn(

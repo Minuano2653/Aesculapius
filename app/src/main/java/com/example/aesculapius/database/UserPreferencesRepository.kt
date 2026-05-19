@@ -32,7 +32,6 @@ class UserPreferencesRepository @Inject constructor(
     val user: Flow<SignUpUiState> = settingDataStore.data.map { preferences ->
         SignUpUiState(
             id = preferences[IS_USER_REGISTERED] ?: "",
-            userRegisterDate = Converters.stringToDateNoFormat(preferences[USER_REGISTER_DATE]),
             name = preferences[NAME] ?: "",
             surname = preferences[SURNAME] ?: "",
             patronymic = preferences[PATRONYMIC] ?: "",
@@ -63,8 +62,6 @@ class UserPreferencesRepository @Inject constructor(
         val AST_TEST = stringPreferencesKey("ast_test")
         val RECOMMENDATION_TEST = stringPreferencesKey("recommendation_test")
 
-        val USER_REGISTER_DATE = stringPreferencesKey("user_register_date")
-
         val SURNAME = stringPreferencesKey("surname")
         val PATRONYMIC = stringPreferencesKey("patronymic")
         val NAME = stringPreferencesKey("name")
@@ -85,28 +82,15 @@ class UserPreferencesRepository @Inject constructor(
      */
     suspend fun saveUserData(signUpUiState: SignUpUiState) {
         settingDataStore.edit { preferences ->
-            if (preferences[IS_USER_REGISTERED] == null) {
-                preferences[IS_USER_REGISTERED] = signUpUiState.id!!
-                preferences[USER_REGISTER_DATE] = LocalDate.now().toString()
-                preferences[SURNAME] = signUpUiState.surname
-                preferences[PATRONYMIC] = signUpUiState.patronymic
-                preferences[NAME] = signUpUiState.name
-                preferences[BIRTHDAY] = signUpUiState.birthday.toString()
-                preferences[HEIGHT] = signUpUiState.height
-                preferences[WEIGHT] = signUpUiState.weight
-                preferences[MORNING_REMINDER_TIME] = Converters.timeToString(signUpUiState.morningReminder)
-                preferences[EVENING_REMINDER_TIME] = Converters.timeToString(signUpUiState.eveningReminder)
-            } else {
-                preferences[IS_USER_REGISTERED] = signUpUiState.id!!
-                preferences[SURNAME] = signUpUiState.surname
-                preferences[PATRONYMIC] = signUpUiState.patronymic
-                preferences[NAME] = signUpUiState.name
-                preferences[BIRTHDAY] = signUpUiState.birthday.toString()
-                preferences[HEIGHT] = signUpUiState.height
-                preferences[WEIGHT] = signUpUiState.weight
-                preferences[MORNING_REMINDER_TIME] = Converters.timeToString(signUpUiState.morningReminder)
-                preferences[EVENING_REMINDER_TIME] = Converters.timeToString(signUpUiState.eveningReminder)
-            }
+            preferences[IS_USER_REGISTERED] = signUpUiState.id!!
+            preferences[SURNAME] = signUpUiState.surname
+            preferences[PATRONYMIC] = signUpUiState.patronymic
+            preferences[NAME] = signUpUiState.name
+            preferences[BIRTHDAY] = signUpUiState.birthday.toString()
+            preferences[HEIGHT] = signUpUiState.height
+            preferences[WEIGHT] = signUpUiState.weight
+            preferences[MORNING_REMINDER_TIME] = Converters.timeToString(signUpUiState.morningReminder)
+            preferences[EVENING_REMINDER_TIME] = Converters.timeToString(signUpUiState.eveningReminder)
         }
     }
 

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -177,6 +176,7 @@ fun YourActivity(score: Double, navigate: (String) -> Unit, metricsScore: Double
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(
             modifier = Modifier
+                .weight(1f)
                 .padding(start = 24.dp)
                 .padding(vertical = 16.dp)
         ) {
@@ -228,7 +228,6 @@ fun YourActivity(score: Double, navigate: (String) -> Unit, metricsScore: Double
                 )
             }
         }
-        Spacer(Modifier.weight(1f))
         Box(
             modifier = Modifier
                 .wrapContentSize()

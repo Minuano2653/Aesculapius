@@ -3,6 +3,7 @@ package com.example.aesculapius.ui.therapy
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
@@ -28,7 +29,9 @@ fun EditMedicineSheet(
     medicine: MedicineCard,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.padding(24.dp)) {
+    Column(modifier = modifier
+        .navigationBarsPadding()
+        .padding(24.dp)) {
         Row {
             Column {
                 Text(

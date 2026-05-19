@@ -458,6 +458,8 @@ class AesculapiusRepository @Inject constructor(private val itemDAO: ItemDAO) {
         return itemDAO.getAllMedicines()
     }
 
+    fun getAllMedicinesFlow(): Flow<List<MedicineItem>> = itemDAO.getAllMedicinesFlow()
+
     suspend fun getAllMetricsInRange(startDate: LocalDate, endDate: LocalDate): List<MetricsItem> {
         return itemDAO.getAllMetricsInRange(startDate, endDate)
     }
