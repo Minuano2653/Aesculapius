@@ -187,7 +187,7 @@ fun SymptomsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .padding(top = 8.dp)
+                .padding(top = 8.dp, bottom = 16.dp)
                     .navigationBarsPadding()
                     .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)

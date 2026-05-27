@@ -15,16 +15,23 @@ import com.example.aesculapius.database.UserRemoteDataRepository
 import com.example.aesculapius.domain.airquality.model.AirQualityCache
 import com.example.aesculapius.domain.airquality.usecases.GetSavedAirQualityCacheFlowUseCase
 import com.example.aesculapius.domain.airquality.usecases.RefreshAirQualityForSavedLocationUseCase
+import com.example.aesculapius.domain.auth.model.SessionState
+import com.example.aesculapius.domain.auth.model.UserRole
+import com.example.aesculapius.domain.auth.usecases.ResolveUserRoleUseCase
 import com.example.aesculapius.domain.auth.usecases.SignOutUseCase
+import com.example.aesculapius.domain.doctor.usecases.PullDoctorProfileUseCase
 import com.example.aesculapius.domain.profile.UserActivityResult
 import com.example.aesculapius.domain.profile.usecases.GetUserActivityScoreUseCase
 import com.example.aesculapius.domain.profile.usecases.GetUserRegisterDateUseCase
+import com.example.aesculapius.domain.profile.usecases.UpdateActivityScoreUseCase
 import com.example.aesculapius.notifications.MetricsAlarm
 import com.example.aesculapius.ui.signup.SignUpUiState
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -38,6 +45,10 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val prefRepository: UserPreferencesRepository,
     private val userRemoteDataRepository: UserRemoteDataRepository,
+    private val resolveUserRoleUseCase: ResolveUserRoleUseCase,
+    private val pullDoctorProfileUseCase: PullDoctorProfileUseCase,
+    private val updateActivityScoreUseCase: UpdateActivityScoreUseCase,
+    private val firebaseAuth: FirebaseAuth,
     @ApplicationContext private val context: Context,
     private val getUserActivityScoreUseCase: GetUserActivityScoreUseCase,
     private val getUserRegisterDateUseCase: GetUserRegisterDateUseCase,
@@ -57,8 +68,30 @@ class ProfileViewModel @Inject constructor(
             initialValue = SignUpUiState()
         )
 
+    val sessionState: StateFlow<SessionState> = combine(
+        prefRepository.user,
+        prefRepository.doctor,
+        prefRepository.role
+    ) { user, doctor, role ->
+        when {
+            user.id == null -> SessionState.Loading
+            user.id.isEmpty() -> SessionState.Guest
+            role == UserRole.DOCTOR -> SessionState.Doctor(doctor)
+            else -> SessionState.Patient(user)
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = SessionState.Loading
+    )
+
     val activityState: StateFlow<UserActivityResult> = flow {
-        emit(getUserActivityScoreUseCase(getUserRegisterDateUseCase()))
+        val result = getUserActivityScoreUseCase(getUserRegisterDateUseCase())
+        emit(result)
+        runCatching {
+            val uid = firebaseAuth.currentUser?.uid.orEmpty()
+            if (uid.isNotEmpty()) updateActivityScoreUseCase(uid)
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -105,6 +138,7 @@ class ProfileViewModel @Inject constructor(
 
             is ProfileEvent.OnSaveNewUser -> {
                 prefRepository.saveUserData(event.signUpUiState)
+                prefRepository.saveRole(UserRole.PATIENT)
                 userRemoteDataRepository.addUserAtFirst(event.signUpUiState)
                 initMorningEveningNotifications(
                     event.signUpUiState.morningReminder,
@@ -121,27 +155,37 @@ class ProfileViewModel @Inject constructor(
             }
 
             is ProfileEvent.OnLoginUser -> {
-                val user = userRemoteDataRepository.pullUserData(event.userId)
-                initMorningEveningNotifications(
-                    LocalDateTime.parse(user.morningReminder),
-                    LocalDateTime.parse(user.eveningReminder)
-                )
-                prefRepository.saveUserData(
-                    SignUpUiState(
+                val role = resolveUserRoleUseCase(event.userId)
+                prefRepository.saveRole(role)
+                if (role == UserRole.DOCTOR) {
+                    val doctor = pullDoctorProfileUseCase(event.userId).copy(
                         id = event.userId,
-                        name = user.name,
-                        surname = user.surname,
-                        patronymic = user.patronymic,
-                        birthday = LocalDate.parse(user.birthDate),
-                        height = user.height.toString(),
-                        weight = user.weight.toString(),
-                        morningReminder = LocalDateTime.parse(user.morningReminder),
-                        eveningReminder = LocalDateTime.parse(user.eveningReminder),
-                        astTestDate = user.astTestDate,
-                        recommendationTestDate = user.recommendationTestDate
+                        email = firebaseAuth.currentUser?.email.orEmpty()
                     )
-                )
-
+                    prefRepository.saveDoctorData(doctor)
+                } else {
+                    val user = userRemoteDataRepository.pullUserData(event.userId)
+                    initMorningEveningNotifications(
+                        LocalDateTime.parse(user.morningReminder),
+                        LocalDateTime.parse(user.eveningReminder)
+                    )
+                    prefRepository.saveUserData(
+                        SignUpUiState(
+                            id = event.userId,
+                            email = firebaseAuth.currentUser?.email.orEmpty(),
+                            name = user.name,
+                            surname = user.surname,
+                            patronymic = user.patronymic,
+                            birthday = LocalDate.parse(user.birthDate),
+                            height = user.height.toString(),
+                            weight = user.weight.toString(),
+                            morningReminder = LocalDateTime.parse(user.morningReminder),
+                            eveningReminder = LocalDateTime.parse(user.eveningReminder),
+                            astTestDate = user.astTestDate,
+                            recommendationTestDate = user.recommendationTestDate
+                        )
+                    )
+                }
             }
         }
     }

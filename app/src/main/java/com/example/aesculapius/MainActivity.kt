@@ -17,12 +17,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
-import com.example.aesculapius.database.UserRemoteDataRepository
+import com.example.aesculapius.domain.auth.model.SessionState
+import com.example.aesculapius.ui.doctor.home.DoctorHomeScreen
 import com.example.aesculapius.ui.home.HomeScreen
 import com.example.aesculapius.ui.navigation.SignUpNavigation
-import com.example.aesculapius.ui.profile.ProfileEvent
 import com.example.aesculapius.ui.profile.ProfileViewModel
-import com.example.aesculapius.ui.signup.SignUpUiState
 import com.example.aesculapius.ui.theme.AesculapiusTheme
 import com.example.aesculapius.worker.UserWorkerSchedule
 import com.jakewharton.threetenabp.AndroidThreeTen
@@ -33,30 +32,38 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // инициализация библиотеки для работы с временем
         AndroidThreeTen.init(this)
 
         setContent {
             AesculapiusTheme {
-
-                // здесь при запуске приложения инициализируются переменные, хранящиеся в DataStore Preferences
                 val profileViewModel: ProfileViewModel = hiltViewModel()
-                val userUiState: SignUpUiState by profileViewModel.userUiState.collectAsState()
+                val session by profileViewModel.sessionState.collectAsState()
 
-                when (userUiState.id) {
-                    "" -> SignUpNavigation(onProfileEvent = profileViewModel::onProfileEvent)
+                when (val state = session) {
+                    is SessionState.Loading -> ImageDisplay()
 
-                    null -> ImageDisplay()
+                    is SessionState.Guest ->
+                        SignUpNavigation(onProfileEvent = profileViewModel::onProfileEvent)
 
-                    else -> {
-                        // передаём id пользователя в worker, запускающийся периодически для бэкапа статистики
-                        val inputData = Data.Builder().putString("userId", userUiState.id).build()
-                        Log.d("USER_TAG", "user id: ${userUiState.id}")
-                        val workRequest = OneTimeWorkRequestBuilder<UserWorkerSchedule>().setInputData(inputData).build()
+                    is SessionState.Patient -> {
+                        val inputData = Data.Builder()
+                            .putString("userId", state.state.id)
+                            .build()
+                        Log.d("USER_TAG", "user id: ${state.state.id}")
+                        val workRequest = OneTimeWorkRequestBuilder<UserWorkerSchedule>()
+                            .setInputData(inputData)
+                            .build()
                         WorkManager.getInstance(this).enqueue(workRequest)
 
                         HomeScreen(
-                            userUiState = userUiState,
+                            userUiState = state.state,
+                            onProfileEvent = profileViewModel::onProfileEvent
+                        )
+                    }
+
+                    is SessionState.Doctor -> {
+                        DoctorHomeScreen(
+                            doctorUiState = state.state,
                             onProfileEvent = profileViewModel::onProfileEvent
                         )
                     }

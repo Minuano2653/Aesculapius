@@ -9,6 +9,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.example.aesculapius.domain.airquality.model.AirQualityCache
 import com.example.aesculapius.domain.airquality.model.AirQualityData
 import com.example.aesculapius.domain.airquality.model.LocationData
+import com.example.aesculapius.domain.auth.model.UserRole
+import com.example.aesculapius.ui.signup.DoctorUiState
 import com.example.aesculapius.ui.signup.SignUpUiState
 import com.squareup.moshi.Moshi
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,6 +34,7 @@ class UserPreferencesRepository @Inject constructor(
     val user: Flow<SignUpUiState> = settingDataStore.data.map { preferences ->
         SignUpUiState(
             id = preferences[IS_USER_REGISTERED] ?: "",
+            email = preferences[EMAIL] ?: "",
             name = preferences[NAME] ?: "",
             surname = preferences[SURNAME] ?: "",
             patronymic = preferences[PATRONYMIC] ?: "",
@@ -42,6 +45,20 @@ class UserPreferencesRepository @Inject constructor(
             eveningReminder = Converters.stringToTime(preferences[EVENING_REMINDER_TIME]),
             astTestDate = preferences[AST_TEST] ?: "",
             recommendationTestDate = preferences[RECOMMENDATION_TEST] ?: ""
+        )
+    }
+
+    val role: Flow<UserRole?> = settingDataStore.data.map { preferences ->
+        preferences[ROLE]?.let { runCatching { UserRole.valueOf(it) }.getOrNull() }
+    }
+
+    val doctor: Flow<DoctorUiState> = settingDataStore.data.map { preferences ->
+        DoctorUiState(
+            id = preferences[IS_USER_REGISTERED] ?: "",
+            name = preferences[NAME] ?: "",
+            surname = preferences[SURNAME] ?: "",
+            patronymic = preferences[PATRONYMIC] ?: "",
+            email = preferences[EMAIL] ?: ""
         )
     }
 
@@ -69,6 +86,9 @@ class UserPreferencesRepository @Inject constructor(
         val HEIGHT = stringPreferencesKey("height")
         val WEIGHT = stringPreferencesKey("weight")
 
+        val ROLE = stringPreferencesKey("role")
+        val EMAIL = stringPreferencesKey("email")
+
         val LATITUDE = doublePreferencesKey("aqi_location_lat")
         val LONGITUDE = doublePreferencesKey("aqi_location_lon")
         val LOCATION_NAME = stringPreferencesKey("aqi_location_name")
@@ -89,6 +109,7 @@ class UserPreferencesRepository @Inject constructor(
             preferences[BIRTHDAY] = signUpUiState.birthday.toString()
             preferences[HEIGHT] = signUpUiState.height
             preferences[WEIGHT] = signUpUiState.weight
+            if (signUpUiState.email.isNotBlank()) preferences[EMAIL] = signUpUiState.email
             preferences[MORNING_REMINDER_TIME] = Converters.timeToString(signUpUiState.morningReminder)
             preferences[EVENING_REMINDER_TIME] = Converters.timeToString(signUpUiState.eveningReminder)
         }
@@ -145,6 +166,22 @@ class UserPreferencesRepository @Inject constructor(
         settingDataStore.edit { preferences ->
             preferences[AQI_DATA_JSON] = json
             preferences[AQI_FETCHED_AT] = data.fetchedAt
+        }
+    }
+
+    suspend fun saveRole(role: UserRole) {
+        settingDataStore.edit { preferences ->
+            preferences[ROLE] = role.name
+        }
+    }
+
+    suspend fun saveDoctorData(doctor: DoctorUiState) {
+        settingDataStore.edit { preferences ->
+            preferences[IS_USER_REGISTERED] = doctor.id
+            preferences[NAME] = doctor.name
+            preferences[SURNAME] = doctor.surname
+            preferences[PATRONYMIC] = doctor.patronymic
+            preferences[EMAIL] = doctor.email
         }
     }
 

@@ -53,6 +53,17 @@ val navigationItemContentList = listOf(
     )
 )
 
+val doctorNavigationItemContentList = listOf(
+    NavigationItemContent(
+        pageType = com.example.aesculapius.ui.doctor.navigation.PatientsListScreen.route,
+        icon = R.drawable.statistics_icon
+    ),
+    NavigationItemContent(
+        pageType = com.example.aesculapius.ui.doctor.navigation.DoctorProfileScreen.route,
+        icon = R.drawable.profile_icon
+    )
+)
+
 val topBarHomeScreen = mapOf(
     StatisticsScreen.route to Pair(R.string.statistics_name, true),
     TherapyScreen.route to Pair(R.string.therapy_name, false),
